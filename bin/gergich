@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+
+require "json"
+require_relative "../lib/gergich"
+
+def info(text)
+  puts text
+  exit
+end
+
+def error(text)
+  $stderr.puts "Error: #{text}"
+  exit 1
+end
+
+commands = {}
+
+commands["help"] = {
+  action: -> (args) {
+    subcommand = args.shift || "help"
+    subcommand_info = commands[subcommand]
+    if !subcommand_info
+      error "Unrecognized command `#{subcommand}`; Run `gergich help` for more info"
+    elsif help_text = subcommand_info[:help]
+      info help_text.respond_to?(:call) ? help_text.call : help_text
+    else
+      error "No help available for `#{subcommand}`"
+    end
+  },
+  help: -> {
+    commands_help = commands.map { |k, c| "#{k} - #{c[:summary]}" if c[:summary] }.compact
+    "Usage: gergich COMMAND [ARGS...]\n\n#{commands_help.join("\n")}\n\nTip: run `gergich help COMMAND` for more info"
+  }
+}
+
+commands["reset"] = {
+  summary: "Clear out the draft for this ChangeId + revision",
+  action: -> (args) {
+    Gergich::Draft.new.reset!
+  },
+  help: -> {
+    <<-TEXT
+gergich reset
+
+Clear out the draft for this ChangeId + revision. Useful for testing.
+TEXT
+  }
+}
+
+commands["publish"] = {
+  summary: "Publish all draft comments for this ChangeId + revision",
+  action: -> (args) {
+    Gergich::Review.new.publish!
+  },
+  help: -> {
+    <<-TEXT
+gergich publish
+
+Publish all draft comments for this ChangeId + revision. no-op if there are
+none.
+
+Note that the cover message and Code-Review score (e.g. -2) are inferred from
+the comments
+TEXT
+  }
+}
+
+commands["comment"] = {
+  summary: "Add one or more comments to this ChangeId + revision",
+  action: -> (args) {
+    comment_data = JSON.parse(args.shift) rescue error("Unable to parse COMMENT_DATA json")
+    comment_data = [comment_data] unless comment_data.is_a?(Array)
+    draft = Gergich::Draft.new
+    begin
+      comment_data.each do |comment|
+        draft.add_comment comment["path"], comment["position"], comment["message"], comment["severity"]
+      end
+    rescue
+      error $!
+    end
+  },
+  help: ->{
+    <<-TEXT
+gergich comment [COMMENT_DATA]
+
+COMMENT_DATA is a JSON object (or array of objects). Each comment object
+should have the following properties:
+  path     - the relative file path, e.g. "app/models/user.rb"
+  position - either a number (line) or an object (range). If an object,
+             must have the following numeric properties:
+               * start_line
+               * start_character
+               * end_line
+               * end_character
+  message  - the text of the comment
+  severity - "info"|"warn"|"error" - this will automatically prefix
+             the comment (e.g. "[ERROR] message here"), and most
+             severe comment will be used to determine the overall
+             Code-Review score (0, -1, or -2 respectively)
+
+Examples
+    gergich comment '{"path":"foo.rb","position":3,"severity":"error",
+                      "message":"ಠ_ಠ"}'
+    gergich comment '{"path":"bar.rb","severity":"warn",
+                      "position":{"start_line":3,"start_character":5,...},
+                      "message":"¯\\_(ツ)_/¯"}'
+    gergich comment '[{"path":"baz.rb",...}, {...}, {...}]'
+TEXT
+  }
+}
+
+command = ARGV.shift || "help"
+commands[command] ?
+  commands[command][:action].call(ARGV) :
+  error("Unrecognized command `#{command}`; Run `gergich help` for more info")
