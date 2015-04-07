@@ -32,7 +32,8 @@ module Gergich
 
     # Public: publish all draft comments. Cover message is auto generated
     def publish!
-      return unless review_info[:score]
+      # only publish if we have something to say or if our last score was negative
+      return unless review_info[:total_comments] > 0 || previous_score < 0
 
       # TODO: rather than just bailing, fetch the comments and only post
       # ones that don't exist (if any)
@@ -46,13 +47,27 @@ module Gergich
       end
     end
 
+    def previous_score
+      last_message = get_messages
+        .sort_by { |message| message["date"] }
+        .reverse
+        .find { |message| message["author"]["username"] == "gergich" }
+
+      text = last_message && last_message["message"] || ""
+      /\APatch Set \d+: Code-Review(?<score>-\d)/ =~ text
+      score.to_i
+    end
+
     def already_commented?
       revision_number = api.get(generate_url)["revisions"][commit.revision_id]["_number"]
-      messages = api.get("/changes/#{commit.change_id}/detail")["messages"]
-      messages.any? do |message|
+      get_messages.any? do |message|
         message["author"]["username"] == "gergich" &&
           message["_revision_number"] == revision_number
       end
+    end
+
+    def get_messages
+      @messages ||= api.get("/changes/#{commit.change_id}/detail")["messages"]
     end
 
     def whats_his_face
@@ -186,33 +201,37 @@ module Gergich
         changed_files = `git diff-tree --no-commit-id --name-only -r HEAD`.split
 
         score = 0
+        total_comments = 0
         commit_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
         other_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
 
         db.execute("SELECT path, position, message, severity FROM comments").each do |row|
+          total_comments += 1
           collection = changed_files.include?(row['path']) ? commit_files_hash : other_files_hash
           collection[row["path"]].add_comment(row["position"], row["message"], row["severity"])
           score = [score, SEVERITY_MAP[row["severity"]]].min
         end
 
-        return {} if commit_files_hash.empty? && other_files_hash.empty?
+        cover_message = infer_cover_message(score, total_comments, other_files_hash)
 
-        cover_message = infer_cover_message(score, other_files_hash)
         {
           comments: Hash[commit_files_hash.map { |key, file| [key, file.to_a] }],
           cover_message: cover_message,
-          score: score
+          score: score,
+          total_comments: total_comments # inline comments, plus ones in cover message
         }
       end
     end
 
-    def infer_cover_message(score, orphaned_files_hash)
+    def infer_cover_message(score, total_comments, orphaned_files_hash)
       cover_message = if score == -2
         "I found some stuff that needs to be fixed before merging."
       elsif score == -1
         "I found some stuff that would be nice to fix."
-      else
+      elsif total_comments > 0
         "Looks good, just some notes."
+      else
+        "Much better :thumbsup:"
       end
 
       if orphaned_files_hash.size > 0
