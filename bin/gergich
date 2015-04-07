@@ -34,7 +34,7 @@ commands["help"] = {
 }
 
 commands["reset"] = {
-  summary: "Clear out the draft for this ChangeId + revision",
+  summary: "Clear out pending comments for this ChangeId + revision",
   action: -> (args) {
     Gergich::Draft.new.reset!
   },
@@ -93,10 +93,10 @@ should have the following properties:
                * end_line
                * end_character
   message  - the text of the comment
-  severity - "info"|"warn"|"error" - this will automatically prefix
-             the comment (e.g. "[ERROR] message here"), and most
-             severe comment will be used to determine the overall
-             Code-Review score (0, -1, or -2 respectively)
+  severity - "info"|"warn"|"error" - this will automatically prefix the
+             comment (e.g. "[ERROR] message here"), and the most severe
+             comment will be used to determine the overall Code-Review
+             score (0, -1, or -2 respectively)
 
 Examples
     gergich comment '{"path":"foo.rb","position":3,"severity":"error",
@@ -110,6 +110,12 @@ TEXT
 }
 
 command = ARGV.shift || "help"
-commands[command] ?
-  commands[command][:action].call(ARGV) :
+if commands[command]
+  begin
+    commands[command][:action].call(ARGV)
+  rescue
+    error($!)
+  end
+else
   error("Unrecognized command `#{command}`; Run `gergich help` for more info")
+end

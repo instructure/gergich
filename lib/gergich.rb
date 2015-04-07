@@ -23,32 +23,35 @@ module Gergich
   end
 
   class Review
-    attr_reader :commit, :draft
+    attr_reader :commit, :draft, :api
     def initialize(commit = Commit, draft = Draft.new)
       @commit = commit
       @draft = draft
+      @api = API.new
     end
 
     # Public: publish all draft comments. Cover message is auto generated
     def publish!
-      return if review_info[:comments].size == 0
-      require "pp"
-      pp generate_payload
-      # TODO zomg
+      api.get("/accounts/self/name")
+      return unless review_info[:score]
+
+      # TODO noop if we've already posted comments on this changeid+revision
+      # https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#list-comments
+
+      api.post(generate_url, generate_payload)
+
+      # because why not
+      if rand < 0.01
+        api.put("/accounts/self/name", {name: whats_his_face}.to_json)
+      end
+    end
+
+    def whats_his_face
+      "#{%w[Garry Larry Terry Jerry].sample} Gergich (Bot)"
     end
 
     def review_info
       @review_info ||= draft.info
-    end
-
-    def generate_cover_message
-      if review_info[:counts_by_severity]["error"] > 0
-        "Found some stuff that needs to be fixed, see inline comments"
-      elsif review_info[:counts_by_severity]["warn"] > 0
-        "Found some stuff that would be nice to fix, see inline comments"
-      else
-        "Looks good, just some notes inline"
-      end
     end
 
     def generate_label
@@ -63,10 +66,43 @@ module Gergich
 
     def generate_payload
       {
-        message: generate_cover_message,
+        message: review_info[:cover_message],
         labels: generate_label,
         comments: review_info[:comments]
       }.to_json
+    end
+  end
+
+  class API
+    attr_reader :http, :cookie, :csrf_token
+
+    def initialize
+      raise "No GERGICH_KEY set" if !ENV['GERGICH_KEY']
+    end
+
+    def get(url)
+      curl(url)
+    end
+
+    def post(url, body)
+      curl(url, "-H \"Content-Type: application/json\" --data-binary #{body.inspect}")
+    end
+
+    def put(url, body)
+      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{body.inspect}")
+    end
+
+    private
+
+    # there's no built-in ruby http digest auth, and to make this portable
+    # we can't relay on HTTParty or others being present. but curl is
+    # everywhere :)
+    def curl(path, extras = nil)
+      ret = `curl --digest -u gergich:#{ENV["GERGICH_KEY"]} #{extras} https://gerrit.instructure.com/a#{path} 2>/dev/null`
+      json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
+        JSON.parse("[#{ret}]")[0] rescue nil
+      end
+      json || raise("Non-JSON response: #{ret}")
     end
   end
 
@@ -123,11 +159,10 @@ module Gergich
     #              * end_character
     # message  - the text of the comment
     # severity - "info"|"warn"|"error" - this will automatically prefix
-    #            the comment (e.g. "[ERROR] message here"), and most
+    #            the comment (e.g. "[ERROR] message here"), and the most
     #            severe comment will be used to determine the overall
     #            Code-Review score (0, -1, or -2 respectively)
     def add_comment(path, position, message, severity)
-      raise "invalid path `#{path}`" unless path && File.exist?(path)
       raise "invalid position `#{position}`" unless position.is_a?(Fixnum) && position >= 0 ||
                                                     position.is_a?(Hash) && position.keys.sort == %w[end_character end_line start_character start_line] && position.values.all? { |v| v.is_a?(Fixnum) && v >= 0 }
       raise "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
@@ -139,22 +174,57 @@ module Gergich
 
     def info
       @info ||= begin
+        changed_files = `git diff-tree --no-commit-id --name-only -r HEAD`.split
+
         score = 0
-        counts_by_severity = Hash.new(0)
-        files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
+        commit_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
+        other_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
 
         db.execute("SELECT path, position, message, severity FROM comments").each do |row|
-          files_hash[row["path"]].add_comment(row["position"], row["message"], row["severity"])
+          collection = changed_files.include?(row['path']) ? commit_files_hash : other_files_hash
+          collection[row["path"]].add_comment(row["position"], row["message"], row["severity"])
           score = [score, SEVERITY_MAP[row["severity"]]].min
-          counts_by_severity[row["severity"]] += 1
         end
 
+        return {} if commit_files_hash.empty? && other_files_hash.empty?
+
+        cover_message = infer_cover_message(score, other_files_hash)
         {
-          comments: Hash[files_hash.map { |key, file| [key, file.to_a] }],
-          score: score,
-          counts_by_severity: counts_by_severity
+          comments: Hash[commit_files_hash.map { |key, file| [key, file.to_a] }],
+          cover_message: cover_message,
+          score: score
         }
       end
+    end
+
+    def infer_cover_message(score, orphaned_files_hash)
+      cover_message = if score == -2
+        "I found some stuff that needs to be fixed before merging."
+      elsif score == -1
+        "I found some stuff that would be nice to fix."
+      else
+        "Looks good, just some notes."
+      end
+
+      if orphaned_files_hash.size > 0
+        cover_message << "\n\n" <<
+          "NOTE: I couldn't create inline comments for everything. " <<
+          "Although this isn't technically part of your commit, you " <<
+          "should still check it out (i.e. side effects or auto-" <<
+          "generated from stuff you *did* change):"
+
+        orphaned_files_hash.each do |path, file|
+          cover_message << "\n\n " << path << ":\n"
+          file.comments.each do |position, comments|
+            comments.each do |comment|
+              line = position.is_a?(Fixnum) ? position : position["start_line"]
+              cover_message << "  * Line #{line}: " << comment
+            end
+          end
+        end
+      end
+
+      cover_message
     end
   end
 
