@@ -1,4 +1,5 @@
 #!/usr/bin/env ruby
+# encoding=utf-8
 
 require "json"
 require_relative "../lib/gergich"
@@ -16,7 +17,7 @@ end
 commands = {}
 
 commands["help"] = {
-  action: -> (args) {
+  action: ->(args) {
     subcommand = args.shift || "help"
     subcommand_info = commands[subcommand]
     if !subcommand_info
@@ -35,7 +36,7 @@ commands["help"] = {
 
 commands["reset"] = {
   summary: "Clear out pending comments for this ChangeId + revision",
-  action: -> (args) {
+  action: ->(args) {
     Gergich::Draft.new.reset!
   },
   help: -> {
@@ -49,7 +50,7 @@ TEXT
 
 commands["publish"] = {
   summary: "Publish all draft comments for this ChangeId + revision",
-  action: -> (args) {
+  action: ->(args) {
     Gergich::Review.new.publish!
   },
   help: -> {
@@ -67,7 +68,7 @@ TEXT
 
 commands["comment"] = {
   summary: "Add one or more comments to this ChangeId + revision",
-  action: -> (args) {
+  action: ->(args) {
     comment_data = JSON.parse(args.shift) rescue error("Unable to parse COMMENT_DATA json")
     comment_data = [comment_data] unless comment_data.is_a?(Array)
     draft = Gergich::Draft.new
@@ -79,7 +80,7 @@ commands["comment"] = {
       error $!
     end
   },
-  help: ->{
+  help: ->() {
     <<-TEXT
 gergich comment [COMMENT_DATA]
 
