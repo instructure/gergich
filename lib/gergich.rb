@@ -48,10 +48,9 @@ module Gergich
     end
 
     def previous_score
-      last_message = get_messages
+      last_message = my_messages
         .sort_by { |message| message["date"] }
-        .reverse
-        .find { |message| message["author"]["username"] == "gergich" }
+        .last
 
       text = last_message && last_message["message"] || ""
       /\APatch Set \d+: Code-Review(?<score>-\d)/ =~ text
@@ -60,14 +59,12 @@ module Gergich
 
     def already_commented?
       revision_number = api.get(generate_url)["revisions"][commit.revision_id]["_number"]
-      get_messages.any? do |message|
-        message["author"]["username"] == "gergich" &&
-          message["_revision_number"] == revision_number
-      end
+      my_messages.any? { |message| message["_revision_number"] == revision_number }
     end
 
-    def get_messages
+    def my_messages
       @messages ||= api.get("/changes/#{commit.change_id}/detail")["messages"]
+        .select { |message| message["author"] && message["author"]["username"] == "gergich" }
     end
 
     def whats_his_face
