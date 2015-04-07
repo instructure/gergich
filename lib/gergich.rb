@@ -32,17 +32,26 @@ module Gergich
 
     # Public: publish all draft comments. Cover message is auto generated
     def publish!
-      api.get("/accounts/self/name")
       return unless review_info[:score]
 
-      # TODO noop if we've already posted comments on this changeid+revision
-      # https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#list-comments
+      # TODO: rather than just bailing, fetch the comments and only post
+      # ones that don't exist (if any)
+      return if already_commented?
 
       api.post(generate_url, generate_payload)
 
       # because why not
       if rand < 0.01
         api.put("/accounts/self/name", {name: whats_his_face}.to_json)
+      end
+    end
+
+    def already_commented?
+      revision_number = api.get(generate_url)["revisions"][commit.revision_id]["_number"]
+      messages = api.get("/changes/#{commit.change_id}/detail")["messages"]
+      messages.any? do |message|
+        message["author"]["username"] == "gergich" &&
+          message["_revision_number"] == revision_number
       end
     end
 
