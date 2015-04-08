@@ -47,7 +47,7 @@ module Gergich
     # Public: publish all draft comments. Cover message is auto generated
     def publish!
       # only publish if we have something to say or if our last score was negative
-      return unless review_info[:total_comments] > 0 || previous_score < 0
+      return unless review_info[:total_comments] > 0 || previous_score_negative?
 
       # TODO: rather than just bailing, fetch the comments and only post
       # ones that don't exist (if any)
@@ -63,14 +63,13 @@ module Gergich
       review_info
     end
 
-    def previous_score
+    def previous_score_negative?
       last_message = my_messages
         .sort_by { |message| message["date"] }
         .last
 
       text = last_message && last_message["message"] || ""
-      /\APatch Set \d+: Code-Review(?<score>-\d)/ =~ text
-      score.to_i
+      text =~ /I found some stuff that/ # TODO: less brittle ... see if we can get previous score from API somehow
     end
 
     def already_commented?
