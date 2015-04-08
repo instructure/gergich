@@ -6,10 +6,14 @@ module Gergich
     class << self
       def info
         @info ||= begin
-          output = `git log -1 HEAD`
+          output = git("log -1 HEAD")
           /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
           {revision_id: revision_id, change_id: change_id}
         end
+      end
+
+      def files
+        @files ||= git("diff-tree --no-commit-id --name-only -r HEAD").split
       end
 
       def revision_id
@@ -18,6 +22,16 @@ module Gergich
 
       def change_id
         info[:change_id]
+      end
+
+      def git(args)
+        Dir.chdir(git_dir) do
+          `git #{args}`
+        end
+      end
+
+      def git_dir
+        ENV["GERGICH_GIT_PATH"] || "."
       end
     end
   end
@@ -195,7 +209,7 @@ module Gergich
 
     def info
       @info ||= begin
-        changed_files = `git diff-tree --no-commit-id --name-only -r HEAD`.split
+        changed_files = commit.files
 
         score = 0
         total_comments = 0
