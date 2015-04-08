@@ -124,14 +124,20 @@ module Gergich
     end
 
     def post(url, body)
-      curl(url, "-H \"Content-Type: application/json\" --data-binary #{body.inspect}")
+      curl(url, "-H \"Content-Type: application/json\" --data-binary #{bash_escape(body)}")
     end
 
     def put(url, body)
-      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{body.inspect}")
+      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{bash_escape(body)}")
     end
 
     private
+
+    def bash_escape(string)
+      # wrap it all in single quotes, except single quotes where we break
+      # out and escape them
+      "'" + string.gsub("'",  "'\\\\''") + "'"
+    end
 
     # there's no built-in ruby http digest auth, and to make this portable
     # we can't relay on HTTParty or others being present. but curl is
@@ -257,11 +263,10 @@ module Gergich
           "generated from stuff you *did* change):"
 
         orphaned_files_hash.each do |path, file|
-          cover_message << "\n\n " << path << ":\n"
           file.comments.each do |position, comments|
             comments.each do |comment|
               line = position.is_a?(Fixnum) ? position : position["start_line"]
-              cover_message << "  * Line #{line}: " << comment
+              cover_message << "\n\n#{path}:#{line}: #{comment}"
             end
           end
         end
