@@ -59,6 +59,8 @@ module Gergich
       if rand < 0.01
         api.put("/accounts/self/name", {name: whats_his_face}.to_json)
       end
+
+      review_info
     end
 
     def previous_score
@@ -72,7 +74,8 @@ module Gergich
     end
 
     def already_commented?
-      revision_number = api.get(generate_url)["revisions"][commit.revision_id]["_number"]
+      gerrit_info = api.get("/changes/?q=#{commit.change_id}&o=ALL_REVISIONS")[0]
+      revision_number = gerrit_info["revisions"][commit.revision_id]["_number"]
       my_messages.any? { |message| message["_revision_number"] == revision_number }
     end
 
@@ -103,7 +106,8 @@ module Gergich
       {
         message: review_info[:cover_message],
         labels: generate_label,
-        comments: review_info[:comments]
+        comments: review_info[:comments],
+        strict_labels: false # we don't want the post to fail if another patchset was created in the interim
       }.to_json
     end
   end
@@ -133,7 +137,7 @@ module Gergich
     # we can't relay on HTTParty or others being present. but curl is
     # everywhere :)
     def curl(path, extras = nil)
-      ret = `curl --digest -u gergich:#{ENV["GERGICH_KEY"]} #{extras} https://gerrit.instructure.com/a#{path} 2>/dev/null`
+      ret = `curl --digest -u gergich:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
       json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
         JSON.parse("[#{ret}]")[0] rescue nil
       end

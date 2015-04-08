@@ -51,7 +51,11 @@ TEXT
 commands["publish"] = {
   summary: "Publish all draft comments for this ChangeId + revision",
   action: ->(args) {
-    Gergich::Review.new.publish!
+    if data = Gergich::Review.new.publish!
+      puts "Published #{data[:total_comments]} comments, set score to #{data[:score]}"
+    else
+      puts "Nothing to publish"
+    end
   },
   help: -> {
     <<-TEXT
