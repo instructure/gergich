@@ -248,7 +248,9 @@ module Gergich
         "I found some stuff that needs to be fixed before merging."
       elsif score == -1
         "I found some stuff that would be nice to fix."
-      elsif total_comments > 0
+      elsif total_comments == 1
+        "Looks good, just one comment."
+      elsif total_comments > 1
         "Looks good, just some notes."
       else
         "Much better :thumbsup:"
