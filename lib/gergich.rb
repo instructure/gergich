@@ -1,6 +1,8 @@
 require "sqlite3"
 require "fileutils"
 
+require_relative "cover_messages"
+
 module Gergich
   class Commit
     class << self
@@ -69,7 +71,7 @@ module Gergich
         .last
 
       text = last_message && last_message["message"] || ""
-      text =~ /I found some stuff that/ # TODO: less brittle ... see if we can get previous score from API somehow
+      CoverMessages.previous_score_minus(text)
     end
 
     def already_commented?
@@ -245,16 +247,16 @@ module Gergich
 
     def infer_cover_message(score, total_comments, orphaned_files_hash)
       cover_message = if score == -2
-        "I found some stuff that needs to be fixed before merging."
-      elsif score == -1
-        "I found some stuff that would be nice to fix."
-      elsif total_comments == 1
-        "Looks good, just one comment."
-      elsif total_comments > 1
-        "Looks good, just some notes."
-      else
-        "Much better :thumbsup:"
-      end
+                        CoverMessages.minus_two.sample
+                      elsif score == -1
+                        CoverMessages.minus_one.sample
+                      elsif total_comments == 1
+                        CoverMessages.one_comment.sample
+                      elsif total_comments > 1
+                        CoverMessages.multiple_comments.sample
+                      else
+                        CoverMessages.now_fixed.sample
+                      end
 
       if orphaned_files_hash.size > 0
         cover_message << "\n\n" <<
