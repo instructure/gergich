@@ -2,7 +2,7 @@ module Gergich
   class CoverMessages
     def self.previous_score_minus(text)
       # TODO: less brittle ... see if we can get previous score from API somehow
-      text =~ /minus .(one|two)|I found some stuff that/
+      text =~ /minus .(one|two)|I found some stuff that/i
     end
 
     def self.minus_two
