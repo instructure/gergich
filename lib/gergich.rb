@@ -71,7 +71,7 @@ module Gergich
         .last
 
       text = last_message && last_message["message"] || ""
-      CoverMessages.previous_score_minus(text)
+      CoverMessages.previous_score_minus(text) || text =~ /-[12]/
     end
 
     def already_commented?
@@ -246,17 +246,7 @@ module Gergich
     end
 
     def infer_cover_message(score, total_comments, orphaned_files_hash)
-      cover_message = if score == -2
-                        CoverMessages.minus_two.sample
-                      elsif score == -1
-                        CoverMessages.minus_one.sample
-                      elsif total_comments == 1
-                        CoverMessages.one_comment.sample
-                      elsif total_comments > 1
-                        CoverMessages.multiple_comments.sample
-                      else
-                        CoverMessages.now_fixed.sample
-                      end
+      cover_message = [-1, -2].include?(score) ? score.to_s : ""
 
       if orphaned_files_hash.size > 0
         cover_message << "\n\n" <<
