@@ -220,7 +220,7 @@ module Gergich
 
     def info
       @info ||= begin
-        changed_files = commit.files
+        changed_files = commit.files + ["/COMMIT_MSG"]
 
         score = 0
         total_comments = 0
