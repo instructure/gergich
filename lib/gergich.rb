@@ -1,7 +1,7 @@
 require "sqlite3"
 require "fileutils"
 
-require_relative "cover_messages"
+GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
 
 module Gergich
   class Commit
@@ -46,10 +46,10 @@ module Gergich
       @api = API.new
     end
 
-    # Public: publish all draft comments. Cover message is auto generated
+    # Public: publish all draft comments/labels/messages
     def publish!
       # only publish if we have something to say or if our last score was negative
-      return unless review_info[:total_comments] > 0 || previous_score_negative?
+      return unless anything_to_publish? || previous_score_negative?
 
       # TODO: rather than just bailing, fetch the comments and only post
       # ones that don't exist (if any)
@@ -65,13 +65,52 @@ module Gergich
       review_info
     end
 
+    def anything_to_publish?
+      !review_info[:comments].empty? ||
+        !review_info[:cover_message].empty? ||
+        review_info[:labels].any? { |name, score| score != 0 }
+    end
+
+    # Public: show the current draft for this patchset
+    def status
+      puts "Gergich DB: #{draft.db_file}"
+      unless anything_to_publish?
+        puts "Nothing to publish"
+        return
+      end
+
+      puts "ChangeId: #{commit.change_id}"
+      puts "Revision: #{commit.revision_id}"
+
+      puts
+      review_info[:labels].each do |name, score|
+        puts "#{name}: #{score}"
+      end
+
+      puts
+      puts "Cover Message:"
+      puts review_info[:cover_message]
+
+      if review_info[:comments].size > 0
+        puts
+        puts "Inline Comments:"
+        puts
+
+        review_info[:comments].each do |file, comments|
+          comments.each do |comment|
+            puts "#{file}:#{comment[:line] || comment[:range]["start_line"]}\n#{comment[:message]}"
+          end
+        end
+      end
+    end
+
     def previous_score_negative?
       last_message = my_messages
         .sort_by { |message| message["date"] }
         .last
 
       text = last_message && last_message["message"] || ""
-      CoverMessages.previous_score_minus(text) || text =~ /-[12]/
+      text =~ /^-[12]/
     end
 
     def already_commented?
@@ -93,12 +132,6 @@ module Gergich
       @review_info ||= draft.info
     end
 
-    def generate_label
-      {
-        "Code-Review" => review_info[:score]
-      }
-    end
-
     def generate_url
       "/changes/#{commit.change_id}/revisions/#{commit.revision_id}/review"
     end
@@ -106,7 +139,7 @@ module Gergich
     def generate_payload
       {
         message: review_info[:cover_message],
-        labels: generate_label,
+        labels: review_info[:labels],
         comments: review_info[:comments],
         strict_labels: false # we don't want the post to fail if another patchset was created in the interim
       }.to_json
@@ -125,16 +158,16 @@ module Gergich
     end
 
     def post(url, body)
-      curl(url, "-H \"Content-Type: application/json\" --data-binary #{bash_escape(body)}")
+      curl(url, "-H \"Content-Type: application/json\" --data-binary #{self.class.bash_escape(body)}")
     end
 
     def put(url, body)
-      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{bash_escape(body)}")
+      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{self.class.bash_escape(body)}")
     end
 
     private
 
-    def bash_escape(string)
+    def self.bash_escape(string)
       # wrap it all in single quotes, except single quotes where we break
       # out and escape them
       "'" + string.gsub("'",  "'\\\\''") + "'"
@@ -144,7 +177,7 @@ module Gergich
     # we can't relay on HTTParty or others being present. but curl is
     # everywhere :)
     def curl(path, extras = nil)
-      ret = `curl --digest -u gergich:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
+      ret = `curl --digest -u #{GERGICH_USER}:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
       json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
         JSON.parse("[#{ret}]")[0] rescue nil
       end
@@ -192,8 +225,45 @@ module Gergich
           severity VARCHAR
         );
       SQL
+      db.execute <<-SQL
+        CREATE TABLE labels (
+          name VARCHAR,
+          score INTEGER
+        );
+      SQL
+      db.execute <<-SQL
+        CREATE TABLE messages (
+          message VARCHAR
+        );
+      SQL
     end
 
+    # Public: add a label to the draft
+    #
+    # name     - the label name, e.g. "Code-Review"
+    # score    - the score, e.g. "-1"
+    #
+    # You can set add the same label multiple times, but the lowest score
+    # for a given label will be used. This also applies to the inferred
+    # "Code-Review" score from comments; if it is non-zero, it will trump
+    # a higher score set here.
+    def add_label(name, score)
+      score = score.to_i
+      raise "invalid score" if score < -2 || score > 1
+      raise "can't set #{name}" if %w[Verified].include?(name)
+
+      db.execute "INSERT INTO labels (name, score) VALUES (?, ?)",
+        [name, score]
+    end
+
+    # Public: add something to the cover message
+    #
+    # These messages will appear after the "-1" (or whatever)
+    def add_message(message)
+      db.execute "INSERT INTO messages (message) VALUES (?)", [message]
+    end
+
+    #
     # Public: add an inline comment to the draft
     #
     # path     - the relative file path, e.g. "app/models/user.rb"
@@ -222,10 +292,16 @@ module Gergich
       @info ||= begin
         changed_files = commit.files + ["/COMMIT_MSG"]
 
-        score = 0
         total_comments = 0
+        score = 0
+        labels = {"Code-Review" => 0}
+
         commit_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
         other_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
+
+        db.execute("SELECT name, MIN(score) AS score FROM labels GROUP BY name").each do |row|
+          labels[row["name"]] = row["score"]
+        end
 
         db.execute("SELECT path, position, message, severity FROM comments").each do |row|
           total_comments += 1
@@ -233,23 +309,26 @@ module Gergich
           collection[row["path"]].add_comment(row["position"], row["message"], row["severity"])
           score = [score, SEVERITY_MAP[row["severity"]]].min
         end
+        labels["Code-Review"] = score if score < 0 && score < labels["Code-Review"]
 
-        cover_message = infer_cover_message(score, total_comments, other_files_hash)
+        cover_message = infer_cover_message(labels["Code-Review"], other_files_hash)
 
         {
           comments: Hash[commit_files_hash.map { |key, file| [key, file.to_a] }],
           cover_message: cover_message,
-          score: score,
-          total_comments: total_comments # inline comments, plus ones in cover message
+          total_comments: total_comments, # inline comments, plus ones in cover message
+          labels: labels,
         }
       end
     end
 
-    def infer_cover_message(score, total_comments, orphaned_files_hash)
-      cover_message = [-1, -2].include?(score) ? score.to_s : ""
+    def infer_cover_message(score, orphaned_files_hash)
+      messages = []
+      messages << score.to_s if score < 0
+      messages.concat db.execute("SELECT message FROM messages").map { |row| row["message"] }
 
       if orphaned_files_hash.size > 0
-        cover_message << "\n\n" <<
+        message =
           "NOTE: I couldn't create inline comments for everything. " <<
           "Although this isn't technically part of your commit, you " <<
           "should still check it out (i.e. side effects or auto-" <<
@@ -259,13 +338,14 @@ module Gergich
           file.comments.each do |position, comments|
             comments.each do |comment|
               line = position.is_a?(Fixnum) ? position : position["start_line"]
-              cover_message << "\n\n#{path}:#{line}: #{comment}"
+              message << "\n\n#{path}:#{line}: #{comment}"
             end
           end
         end
+        messages << message
       end
 
-      cover_message
+      messages.join("\n\n")
     end
   end
 
