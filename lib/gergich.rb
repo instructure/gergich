@@ -1,65 +1,79 @@
 require "sqlite3"
+require "json"
 require "fileutils"
+require "shellwords"
 
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
 
 module Gergich
+  def self.git(args)
+    Dir.chdir(git_dir) do
+      `git #{args} 2>/dev/null`
+    end
+  end
+
+  def self.git_dir
+    ENV["GERGICH_GIT_PATH"] || "."
+  end
+
   class Commit
-    class << self
-      def info
-        @info ||= begin
-          output = git("log -1 HEAD")
-          /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
-          {revision_id: revision_id, change_id: change_id}
-        end
-      end
+    attr_reader :ref
 
-      def files
-        @files ||= git("diff-tree --no-commit-id --name-only -r HEAD").split
-      end
+    def initialize(ref = "HEAD", revision_number = nil)
+      @ref = ref
+      @revision_number = revision_number
+    end
 
-      def revision_id
-        info[:revision_id]
+    def info
+      @info ||= begin
+        output = Gergich.git("log -1 #{ref}")
+        /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
+        {revision_id: revision_id, change_id: change_id}
       end
+    end
 
-      def change_id
-        info[:change_id]
-      end
+    def files
+      @files ||= Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
+    end
 
-      def git(args)
-        Dir.chdir(git_dir) do
-          `git #{args}`
-        end
-      end
+    def revision_id
+      info[:revision_id]
+    end
 
-      def git_dir
-        ENV["GERGICH_GIT_PATH"] || "."
+    def revision_number
+      @revision_number ||= begin
+        gerrit_info = API.get("/changes/?q=#{change_id}&o=ALL_REVISIONS")[0]
+        gerrit_info["revisions"][revision_id]["_number"]
       end
+    end
+
+    def change_id
+      info[:change_id]
     end
   end
 
   class Review
-    attr_reader :commit, :draft, :api
-    def initialize(commit = Commit, draft = Draft.new)
+    attr_reader :commit, :draft
+
+    def initialize(commit = Commit.new, draft = Draft.new)
       @commit = commit
       @draft = draft
-      @api = API.new
     end
 
     # Public: publish all draft comments/labels/messages
-    def publish!
+    def publish!(allow_repost = false)
       # only publish if we have something to say or if our last score was negative
       return unless anything_to_publish? || previous_score_negative?
 
       # TODO: rather than just bailing, fetch the comments and only post
       # ones that don't exist (if any)
-      return if already_commented?
+      return if already_commented? && !allow_repost
 
-      api.post(generate_url, generate_payload)
+      API.post(generate_url, generate_payload)
 
       # because why not
-      if rand < 0.01
-        api.put("/accounts/self/name", {name: whats_his_face}.to_json)
+      if rand < 0.01 && GERGICH_USER == "gergich"
+        API.put("/accounts/self/name", {name: whats_his_face}.to_json)
       end
 
       review_info
@@ -104,24 +118,29 @@ module Gergich
       end
     end
 
-    def previous_score_negative?
+    def previous_score
       last_message = my_messages
         .sort_by { |message| message["date"] }
         .last
 
       text = last_message && last_message["message"] || ""
       text =~ /^-[12]/
+
+      ($& || "").to_i
+    end
+
+    def previous_score_negative?
+      previous_score < 0
     end
 
     def already_commented?
-      gerrit_info = api.get("/changes/?q=#{commit.change_id}&o=ALL_REVISIONS")[0]
-      revision_number = gerrit_info["revisions"][commit.revision_id]["_number"]
+      revision_number = commit.revision_number
       my_messages.any? { |message| message["_revision_number"] == revision_number }
     end
 
     def my_messages
-      @messages ||= api.get("/changes/#{commit.change_id}/detail")["messages"]
-        .select { |message| message["author"] && message["author"]["username"] == "gergich" }
+      @messages ||= API.get("/changes/#{commit.change_id}/detail")["messages"]
+        .select { |message| message["author"] && message["author"]["username"] == GERGICH_USER }
     end
 
     def whats_his_face
@@ -147,41 +166,32 @@ module Gergich
   end
 
   class API
-    attr_reader :http, :cookie, :csrf_token
-
-    def initialize
-      raise "No GERGICH_KEY set" if !ENV['GERGICH_KEY']
-    end
-
-    def get(url)
-      curl(url)
-    end
-
-    def post(url, body)
-      curl(url, "-H \"Content-Type: application/json\" --data-binary #{self.class.bash_escape(body)}")
-    end
-
-    def put(url, body)
-      curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{self.class.bash_escape(body)}")
-    end
-
-    private
-
-    def self.bash_escape(string)
-      # wrap it all in single quotes, except single quotes where we break
-      # out and escape them
-      "'" + string.gsub("'",  "'\\\\''") + "'"
-    end
-
-    # there's no built-in ruby http digest auth, and to make this portable
-    # we can't relay on HTTParty or others being present. but curl is
-    # everywhere :)
-    def curl(path, extras = nil)
-      ret = `curl --digest -u #{GERGICH_USER}:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
-      json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
-        JSON.parse("[#{ret}]")[0] rescue nil
+    class << self
+      def get(url)
+        curl(url)
       end
-      json || raise("Non-JSON response: #{ret}")
+
+      def post(url, body)
+        curl(url, "-H \"Content-Type: application/json\" --data-binary #{Shellwords.escape(body)}")
+      end
+
+      def put(url, body)
+        curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{Shellwords.escape(body)}")
+      end
+
+      private
+
+      # there's no built-in ruby http digest auth, and to make this portable
+      # we can't relay on HTTParty or others being present. but curl is
+      # everywhere :)
+      def curl(path, extras = nil)
+        raise "No GERGICH_KEY set" if !ENV['GERGICH_KEY']
+        ret = `curl --digest -u #{GERGICH_USER}:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
+        json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
+          JSON.parse(ret) rescue nil
+        end
+        json || raise("Non-JSON response: #{ret}")
+      end
     end
   end
 
@@ -194,12 +204,12 @@ module Gergich
 
     attr_reader :db, :commit
 
-    def initialize(commit = Commit)
+    def initialize(commit = Commit.new)
       @commit = commit
     end
 
     def db_file
-      @db_file ||= File.expand_path("/tmp/gergich-#{commit.revision_id}.sqlite3")
+      @db_file ||= File.expand_path("/tmp/#{GERGICH_USER}-#{commit.revision_id}.sqlite3")
     end
 
     def db

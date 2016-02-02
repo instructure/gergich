@@ -1,7 +1,6 @@
 #!/usr/bin/env ruby
 # encoding=utf-8
 
-require "json"
 require_relative "../lib/gergich"
 
 def info(text)
@@ -34,7 +33,7 @@ def run_ci_test!(commands_to_test)
   commands << ["publish"]
 
   commands.each do |command, args = []|
-    output = `bin/gergich #{command} #{args.map{ |arg| Gergich::API.bash_escape(arg.to_s) }.join(" ")} 2>&1`
+    output = `bin/gergich #{command} #{args.map{ |arg| Shellwords.escape(arg.to_s) }.join(" ")} 2>&1`
     error("`gergich citest` failed on step `#{command}`: #{output}") unless $?.success?
   end
 end

@@ -1,0 +1,145 @@
+#!/usr/bin/env ruby
+# encoding=utf-8
+
+$stdout.sync = true
+
+def info(text)
+  puts text
+  exit
+end
+
+def error(text)
+  $stderr.puts "Error: #{text}"
+  exit 1
+end
+
+ENV["GERGICH_USER"] = ENV.fetch("MASTER_BOUNCER_USER", "master_bouncer")
+ENV["GERGICH_KEY"] = ENV["MASTER_BOUNCER_KEY"] || error("no MASTER_BOUNCER_KEY set")
+require_relative "../lib/gergich"
+
+PROJECT = ENV["GERRIT_PROJECT"] || error("no GERRIT_PROJECT set")
+# TODO: configurable thresholds per-project, also time-based thresholds
+WARN_DISTANCE = 100
+ERROR_DISTANCE = 200
+
+def potentially_mergeable_changes
+  changes = Gergich::API.get("/changes/?q=status:open+p:#{PROJECT}+label:Verified=1+is:mergeable+branch:master&o=CURRENT_REVISION")
+  changes.select { |c| c["subject"] !~ /\Awip($|\W)/i }
+end
+
+def maybe_bounce_commit!(commit)
+  draft = Gergich::Draft.new(commit)
+  draft.reset!
+
+  distance = Gergich.git("rev-list origin/master ^#{commit.ref} --count").to_i
+  detail = "#{distance} commits behind master"
+
+  score = 0
+  message = nil
+  if distance > ERROR_DISTANCE
+    score = -2
+    message = "This commit is probably not safe to merge (#{detail}). You'll need to rebase it to ensure all the tests still pass."
+  elsif distance > WARN_DISTANCE
+    score = -1
+    message = "This commit may not be safe to merge (#{detail}). Please rebase to make sure all the tests still pass."
+  end
+
+  review = Gergich::Review.new(commit, draft)
+  previous_score = review.previous_score
+
+  puts "#{detail}, " + (score == previous_score ? "score still #{score}" : "changing score from #{previous_score} to #{score}")
+
+  # since we run on a daily cron, we might be checking the same patchset
+  # many times, so bail if nothing has changed
+  return if score == previous_score
+
+  draft.add_label "Code-Review", score
+  draft.add_message message if message
+
+  # otherwise we always publish ... even in the score=0 case it's
+  # important, as we might be undoing a previous negative score.
+  # similarly, over time the same patchset will become more out of date,
+  # so we allow_repost (so to speak) so we can add increasingly negative
+  # reviews
+  review.publish!(:allow_repost)
+end
+
+commands = {}
+
+commands["help"] = {
+  action: ->(args) {
+    subcommand = args.shift || "help"
+    subcommand_info = commands[subcommand]
+    if !subcommand_info
+      error "Unrecognized command `#{subcommand}`; Run `master_bouncer help` for more info"
+    elsif help_text = subcommand_info[:help]
+      info help_text.respond_to?(:call) ? help_text.call : help_text
+    else
+      error "No help available for `#{subcommand}`"
+    end
+  },
+  help: -> {
+    indentation = commands.keys.map(&:size).sort.last
+    commands_help = commands
+      .to_a
+      .sort_by(&:first)
+      .map { |key, data|
+        "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
+      }
+      .compact
+    "Usage: master_bouncer <command> [<args>...]\n\n#{commands_help.join("\n")}\n\nTip: run `master_bouncer help <command>` for more info"
+  }
+}
+
+commands["check"] = {
+  summary: "Check the current commit's age",
+  action: ->(args) {
+    maybe_bounce_commit! Gergich::Commit.new
+  },
+  help: ->() {
+    <<-TEXT
+master_bouncer check
+
+Check the current commit's age, and bounce it if it's too old (-1 or -2,
+depending on the threshold)
+TEXT
+  }
+}
+
+commands["check_all"] = {
+  summary: "Check the age of all potentially mergeable changes",
+  action: ->(args) {
+    Gergich.git("fetch")
+
+    potentially_mergeable_changes.each do |change|
+      print "Checking g/#{change["_number"]}... "
+
+      sha = change["current_revision"]
+      revinfo = change["revisions"][sha]
+      refspec = revinfo["ref"]
+      number = revinfo["_number"]
+      Gergich.git("fetch ssh://gerrit.instructure.com:29418/#{PROJECT} #{refspec}")
+
+      maybe_bounce_commit! Gergich::Commit.new(sha, number)
+      sleep 1
+    end
+  },
+  help: ->() {
+    <<-TEXT
+master_bouncer check_all
+
+Check all open Verified+1 patchsets and bounce any that are too old.
+TEXT
+  }
+}
+
+command = ARGV.shift || "help"
+if commands[command]
+  begin
+    commands[command][:action].call(ARGV)
+  rescue
+    error($!)
+  end
+else
+  error("Unrecognized command `#{command}`; Run `master_bouncer help` for more info")
+end
