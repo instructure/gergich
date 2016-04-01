@@ -1,41 +1,105 @@
 # Gergich
 
-CLI and little ruby lib for programatically posting reviews to gerrit.
-Used by canvas/catalog/bridge to post inline comments from linters
-on jenkins (rubocop, i18n, etc)
+Gergich is a command-line tool (and ruby lib) for easily posting comments
+on a [Gerrit](https://www.gerritcodereview.com/) review from a CI
+environment. It can be wired up to linters (rubocop, eslint, etc.) so that
+you can get nice inline comments right on the Gerrit review. That way
+developers don't have to go digging through CI logs to see why their
+builds failed.
 
 ## How does it work?
 
 Gergich maintains a little sqlite db of any draft comments/labels/etc.
 for the current patchset (defined by revision+ChangeId). This way
 different processes can all contribute to the review. For example,
-various linters add inline comments, and when the jenkins build finishes
-gergich publishes the review to gerrit.
+various linters add inline comments, and when the CI build finishes,
+Gergich publishes the review to Gerrit.
 
 ## Limitations
 
 Because everything is synchronized/stored in a local sqlite db, you
-should only call gergich from a single box/build per patchset. For
-example, canvas should only run gergich on the aux build (and just one
-aux build, at that). Gergich does a check when publishing to ensure he
-hasn't already posted on this patchset before; if he has, publish will be
-a no-op.
+should only call Gergich from a single box/build per patchset. Gergich
+does a check when publishing to ensure he hasn't already posted on this
+patchset before; if he has, publish will be a no-op. This protects
+against reposts (say, on a retrigger), but it does mean that you shouldn't
+have completely different builds posting Gergich comments on the same
+revision, unless you set up different credentials for each.
+
+## Installation
+
+Before you can use Gergich, you need a Gerrit user whose credentials it'll
+use (ideally not your own). With your shiny new username and password in
+hand, set `GERGICH_USER` and `GERGICH_KEY` accordingly in your CI
+environment.
+
+Assuming you have Gergich installed somewhere on your CI node, ensure its
+`bin` directory is in your `PATH`
+
+## Usage
+
+Run `gergich help` for detailed information about all supported commands.
+In your build scripts, you'll typically be using `gergich comment` and
+`gergich publish`. Comments are stored locally in a sqlite database until
+you publish. This way you can queue up comments from many disparate
+processes. Comments are published to `HEAD`'s corresponding patchset in
+Gerrit (based on Change-Id + `<sha>`)
+
+### `gergich comment <comment_data>`
+
+`<comment_data>` is a JSON object (or array of objects). Each comment
+object should have the following properties:
+
+* **path** - the relative file path, e.g. "app/models/user.rb"
+* **position** - either a number (line) or an object (range). If an object,
+  must have the following numeric properties:
+  * start_line
+  * start_character
+  * end_line
+  * end_character
+* **message** - the text of the comment
+* **severity** - `"info"|"warn"|"error"` - this will automatically prefix
+  the comment (e.g. `"[ERROR] message here"`), and the most severe comment
+  will be used to determine the overall `Code-Review` score (0, -1, or -2
+  respectively)
+
+Note that a cover message and `Code-Review` score will be inferred from the
+most severe comment.
+
+#### Examples
+
+```bash
+gergich comment '{"path":"foo.rb","position":3,"severity":"error",
+                  "message":"ಠ_ಠ"}'
+gergich comment '{"path":"bar.rb","severity":"warn",
+                  "position":{"start_line":3,"start_character":5,...},
+                  "message":"¯\_(ツ)_/¯"}'
+gergich comment '[{"path":"baz.rb",...}, {...}, {...}]'
+```
+
+### `gergich publish`
+
+Publish all draft comments/labels/messages for this patchset. no-op if
+there are none.
+
+The cover message and `Code-Review` label (e.g. -2) are inferred from the
+comments, but labels and messages may be manually set (via `gergich
+message` and `gergich labels`)
 
 ## How do I test my changes?
 
 Write tests of course, but also be sure to test it end-to-end via the
-CLI... Run `bin/gergich` for a list of commands, as well as help for each
-command. There's also a `citest` thing that runs on jenkins that ensures
-each CLI command succeeds, but it doesn't test all branches for each
-command.
+CLI... Run `gergich` for a list of commands, as well as help for each
+command. There's also a `citest` thing that we run on our Jenkins that
+ensures each CLI command succeeds, but it doesn't test all branches for
+each command.
 
-After running a given command, you can run `bin/gergich status` to see
-the current draft of the review (what will be sent to gerrit when you
-do `bin/gergich publish`).
+After running a given command, you can run `gergich status` to see the
+current draft of the review (what will be sent to Gerrit when you do
+`gergich publish`).
 
-You can even do a test `publish` to gerrit, if you have valid gerrit
-credentials in GERGICH_USER / GERGICH_KEY. It infers the gerrit patchset
+You can even do a test `publish` to Gerrit, if you have valid Gerrit
+credentials in `GERGICH_USER` / `GERGICH_KEY`. It infers the Gerrit patchset
 from the working directory, which may or may not correspond to something
-actually in gerrit, so ymmv. That means you can post to a gergich commit
-in gerrit, or if you run it from your canvas dir, you can post to a canvas
-commit, etc.
+actually in Gerrit, so YMMV. That means you can post to a Gergich commit
+in Gerrit, or if you run it from another project's directory, you can post
+to its Gerrit revision.
