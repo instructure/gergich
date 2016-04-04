@@ -3,6 +3,7 @@
 
 require_relative "../lib/gergich"
 require "shellwords"
+require "English"
 
 def info(text)
   puts text
@@ -21,9 +22,7 @@ def run_ci_test!(commands_to_test)
     "message" => ["this is a test"]
   }
 
-  commands = commands_to_test.map do |command|
-    [command, arg_map[command] || []]
-  end
+  commands = commands_to_test.map { |command| [command, arg_map[command] || []] }
 
   # after running our test commands, reset and publish frd:
   commands << ["reset"]
@@ -34,11 +33,11 @@ def run_ci_test!(commands_to_test)
   commands << ["publish"]
 
   commands.each do |command, args = []|
-    output = `bin/gergich #{command} #{args.map{ |arg| Shellwords.escape(arg.to_s) }.join(" ")} 2>&1`
-    error("`gergich citest` failed on step `#{command}`: #{output}") unless $?.success?
+    arglist = args.map { |arg| Shellwords.escape(arg.to_s) }
+    output = `bin/gergich #{command} #{arglist.join(" ")} 2>&1`
+    error("`gergich citest` failed on step `#{command}`: #{output}") unless $CHILD_STATUS.success?
   end
 end
-
 
 commands = {}
 
@@ -48,7 +47,7 @@ commands["help"] = {
     subcommand_info = commands[subcommand]
     if !subcommand_info
       error "Unrecognized command `#{subcommand}`; Run `gergich help` for more info"
-    elsif help_text = subcommand_info[:help]
+    elsif (help_text = subcommand_info[:help])
       info help_text.respond_to?(:call) ? help_text.call : help_text
     else
       error "No help available for `#{subcommand}`"
@@ -63,13 +62,14 @@ commands["help"] = {
         "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
       }
       .compact
-    "Usage: gergich <command> [<args>...]\n\n#{commands_help.join("\n")}\n\nTip: run `gergich help <command>` for more info"
+    "Usage: gergich <command> [<args>...]\n\n#{commands_help.join("\n")}\n\n" \
+    "Tip: run `gergich help <command>` for more info"
   }
 }
 
 commands["reset"] = {
   summary: "Clear out pending comments/labels/messages for this patchset",
-  action: ->(args) {
+  action: ->(_args) {
     Gergich::Draft.new.reset!
   },
   help: -> {
@@ -83,8 +83,8 @@ TEXT
 
 commands["publish"] = {
   summary: "Publish the draft for this patchset",
-  action: ->(args) {
-    if data = Gergich::Review.new.publish!
+  action: ->(_args) {
+    if (data = Gergich::Review.new.publish!)
       puts "Published #{data[:total_comments]} comments, set score to #{data[:score]}"
     else
       puts "Nothing to publish"
@@ -106,7 +106,7 @@ TEXT
 
 commands["status"] = {
   summary: "Show the current draft for this patchset",
-  action: ->(args) {
+  action: ->(_args) {
     Gergich::Review.new.status
   },
   help: -> {
@@ -124,11 +124,19 @@ TEXT
 commands["comment"] = {
   summary: "Add one or more draft comments to this patchset",
   action: ->(args) {
-    comment_data = JSON.parse(args.shift) rescue error("Unable to parse <comment_data> json")
+    comment_data = begin
+      JSON.parse(args.shift)
+    rescue JSON::ParserError
+      error("Unable to parse <comment_data> json")
+    end
     comment_data = [comment_data] unless comment_data.is_a?(Array)
+
     draft = Gergich::Draft.new
     comment_data.each do |comment|
-      draft.add_comment comment["path"], comment["position"], comment["message"], comment["severity"]
+      draft.add_comment comment["path"],
+                        comment["position"],
+                        comment["message"],
+                        comment["severity"]
     end
   },
   help: ->() {
@@ -204,9 +212,9 @@ TEXT
 
 commands["citest"] = {
   summary: "Do a full gergich test based on the current commit",
-  action: ->(args) {
+  action: ->(_args) {
     # automagically test any new command that comes along
-    commands_to_test = commands.keys - ["citest", "reset", "publish"]
+    commands_to_test = commands.keys - %w[citest reset publish]
     run_ci_test!(commands_to_test)
   },
   help: ->() {
@@ -230,7 +238,7 @@ if commands[command]
   begin
     commands[command][:action].call(ARGV)
   rescue
-    error($!.to_s + "\n" + $!.backtrace.join("\n"))
+    error($ERROR_INFO.to_s + "\n" + $ERROR_INFO.backtrace.join("\n"))
   end
 else
   error("Unrecognized command `#{command}`; Run `gergich help` for more info")

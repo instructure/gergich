@@ -25,7 +25,7 @@ module Gergich
       @info ||= begin
         output = Gergich.git("log -1 #{ref}")
         /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
-        {revision_id: revision_id, change_id: change_id}
+        { revision_id: revision_id, change_id: change_id }
       end
     end
 
@@ -70,7 +70,7 @@ module Gergich
 
       # because why not
       if rand < 0.01 && GERGICH_USER == "gergich"
-        API.put("/accounts/self/name", {name: whats_his_face}.to_json)
+        API.put("/accounts/self/name", { name: whats_his_face }.to_json)
       end
 
       review_info
@@ -79,7 +79,7 @@ module Gergich
     def anything_to_publish?
       !review_info[:comments].empty? ||
         !review_info[:cover_message].empty? ||
-        review_info[:labels].any? { |name, score| score != 0 }
+        review_info[:labels].any? { |_, score| score != 0 }
     end
 
     # Public: show the current draft for this patchset
@@ -102,14 +102,14 @@ module Gergich
       puts "Cover Message:"
       puts review_info[:cover_message]
 
-      if review_info[:comments].size > 0
+      unless review_info[:comments].empty?
         puts
         puts "Inline Comments:"
         puts
 
         review_info[:comments].each do |file, comments|
           comments.each do |comment|
-            puts "#{file}:#{comment[:line] || comment[:range]["start_line"]}\n#{comment[:message]}"
+            puts "#{file}:#{comment[:line] || comment[:range]['start_line']}\n#{comment[:message]}"
           end
         end
       end
@@ -157,7 +157,9 @@ module Gergich
         message: review_info[:cover_message],
         labels: review_info[:labels],
         comments: review_info[:comments],
-        strict_labels: false # we don't want the post to fail if another patchset was created in the interim
+        # we don't want the post to fail if another
+        # patchset was created in the interim
+        strict_labels: false
       }.to_json
     end
   end
@@ -180,16 +182,23 @@ module Gergich
 
       def perform(method, url, body = nil)
         options = base_options
-        options.merge!({ headers: {"Content-Type" => "application/json"}, body: body }) if body
-        ret = HTTParty.send(method, url, options).body
-        json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
-          JSON.parse(ret) rescue nil
+        if body
+          options[:headers] = { "Content-Type" => "application/json" }
+          options[:body] = body
         end
-        json || raise("Non-JSON response: #{ret}")
+        ret = HTTParty.send(method, url, options).body
+        if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
+          JSON.parse(ret)
+        else
+          raise("Non-JSON response: #{ret}")
+        end
       end
 
       def base_uri
-        @base_url ||= ENV.fetch("GERRIT_BASE_URL", ENV.key?("GERRIT_HOST") ? "https://#{ENV["GERRIT_HOST"]}" : raise("need to set GERRIT_BASE_URL or GERRIT_HOST"))
+        @base_url ||= \
+          ENV["GERRIT_BASE_URL"] ||
+          ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}" ||
+          raise("need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
       def base_options
@@ -209,7 +218,7 @@ module Gergich
       "info" => 0,
       "warn" => -1,
       "error" => -2
-    }
+    }.freeze
 
     attr_reader :db, :commit
 
@@ -226,7 +235,7 @@ module Gergich
         db_exists = File.exist?(db_file)
         db = SQLite3::Database.new(db_file)
         db.results_as_hash = true
-        create_db_schema! if !db_exists
+        create_db_schema! unless db_exists
         db
       end
     end
@@ -272,7 +281,7 @@ module Gergich
       raise "can't set #{name}" if %w[Verified].include?(name)
 
       db.execute "INSERT INTO labels (name, score) VALUES (?, ?)",
-        [name, score]
+                 [name, score]
     end
 
     # Public: add something to the cover message
@@ -298,86 +307,130 @@ module Gergich
     #            severe comment will be used to determine the overall
     #            Code-Review score (0, -1, or -2 respectively)
     def add_comment(path, position, message, severity)
-      raise "invalid position `#{position}`" unless position.is_a?(Fixnum) && position >= 0 ||
-                                                    position.is_a?(Hash) && position.keys.sort == %w[end_character end_line start_character start_line] && position.values.all? { |v| v.is_a?(Fixnum) && v >= 0 }
+      raise "invalid position `#{position}`" unless valid_position?(position)
       raise "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
-      raise "no message specified" unless message.is_a?(String) && message.size > 0
+      raise "no message specified" unless message.is_a?(String) && !message.empty?
 
       db.execute "INSERT INTO comments (path, position, message, severity) VALUES (?, ?, ?, ?)",
-        [path, position, message, severity]
+                 [path, position, message, severity]
+    end
+
+    POSITION_KEYS = %w[end_character end_line start_character start_line].freeze
+    def valid_position?(position)
+      (
+        position.is_a?(Fixnum) && position >= 0
+      ) || (
+        position.is_a?(Hash) && position.keys.sort == POSITION_KEYS &&
+        position.values.all? { |v| v.is_a?(Fixnum) && v >= 0 }
+      )
+    end
+
+    def labels
+      @labels ||= begin
+        labels = { "Code-Review" => 0 }
+        db.execute("SELECT name, MIN(score) AS score FROM labels GROUP BY name").each do |row|
+          labels[row["name"]] = row["score"]
+        end
+        score = min_comment_score
+        labels["Code-Review"] = score if score < 0 && score < labels["Code-Review"]
+        labels
+      end
+    end
+
+    def all_comments
+      @all_comments ||= begin
+        comments = {}
+
+        sql = "SELECT path, position, message, severity FROM comments"
+        db.execute(sql).each do |row|
+          inline = changed_files.include?(row["path"])
+          comments[row["path"]] ||= FileReview.new(row["path"], inline)
+          comments[row["path"]].add_comment(row["position"],
+                                            row["message"],
+                                            row["severity"])
+        end
+
+        comments.values
+      end
+    end
+
+    def inline_comments
+      all_comments.select(&:inline)
+    end
+
+    def other_comments
+      all_comments.reject(&:inline)
+    end
+
+    def min_comment_score
+      all_comments.inject(0) { |a, e| [a, e.min_score].min }
+    end
+
+    def changed_files
+      @changed_files ||= commit.files + ["/COMMIT_MSG"]
     end
 
     def info
       @info ||= begin
-        changed_files = commit.files + ["/COMMIT_MSG"]
-
-        total_comments = 0
-        score = 0
-        labels = {"Code-Review" => 0}
-
-        commit_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
-        other_files_hash = Hash.new { |hash, path| hash[path] = FileReview.new(path) }
-
-        db.execute("SELECT name, MIN(score) AS score FROM labels GROUP BY name").each do |row|
-          labels[row["name"]] = row["score"]
-        end
-
-        db.execute("SELECT path, position, message, severity FROM comments").each do |row|
-          total_comments += 1
-          collection = changed_files.include?(row['path']) ? commit_files_hash : other_files_hash
-          collection[row["path"]].add_comment(row["position"], row["message"], row["severity"])
-          score = [score, SEVERITY_MAP[row["severity"]]].min
-        end
-        labels["Code-Review"] = score if score < 0 && score < labels["Code-Review"]
-
-        cover_message = infer_cover_message(labels["Code-Review"], other_files_hash)
+        comments = Hash[inline_comments.map { |file| [file.path, file.to_a] }]
 
         {
-          comments: Hash[commit_files_hash.map { |key, file| [key, file.to_a] }],
+          comments: comments,
           cover_message: cover_message,
-          total_comments: total_comments, # inline comments, plus ones in cover message
-          labels: labels,
+          total_comments: comments.map(&:count).inject(&:+),
+          score: labels["Code-Review"],
+          labels: labels
         }
       end
     end
 
-    def infer_cover_message(score, orphaned_files_hash)
-      messages = []
-      messages << score.to_s if score < 0
-      messages.concat db.execute("SELECT message FROM messages").map { |row| row["message"] }
+    def messages
+      db.execute("SELECT message FROM messages").map { |row| row["message"] }
+    end
 
-      if orphaned_files_hash.size > 0
-        message =
-          "NOTE: I couldn't create inline comments for everything. " <<
-          "Although this isn't technically part of your commit, you " <<
-          "should still check it out (i.e. side effects or auto-" <<
-          "generated from stuff you *did* change):"
+    def orphaned_message
+      message = "NOTE: I couldn't create inline comments for everything. " \
+                "Although this isn't technically part of your commit, you " \
+                "should still check it out (i.e. side effects or auto-" \
+                "generated from stuff you *did* change):"
 
-        orphaned_files_hash.each do |path, file|
-          file.comments.each do |position, comments|
-            comments.each do |comment|
-              line = position.is_a?(Fixnum) ? position : position["start_line"]
-              message << "\n\n#{path}:#{line}: #{comment}"
-            end
+      other_comments.each do |file|
+        file.comments.each do |position, comments|
+          comments.each do |comment|
+            line = position.is_a?(Fixnum) ? position : position["start_line"]
+            message << "\n\n#{file.path}:#{line}: #{comment}"
           end
         end
-        messages << message
       end
+    end
 
-      messages.join("\n\n")
+    def cover_message
+      score = labels["Code-Review"]
+      parts = messages
+      parts.unshift score.to_s if score < 0
+
+      parts << orphaned_message unless other_comments.empty?
+      parts.join("\n\n")
     end
   end
 
   class FileReview
-    attr_accessor :path, :comments
-    def initialize(path)
+    attr_accessor :path, :comments, :inline, :min_score
+
+    def initialize(path, inline)
       self.path = path
       self.comments = Hash.new { |hash, position| hash[position] = [] }
+      self.inline = inline
     end
 
     def add_comment(position, message, severity)
       position = position.to_i if position =~ /\A\d+\z/
       comments[position] << "[#{severity.upcase}] #{message}"
+      self.min_score = [min_score || 0, Draft::SEVERITY_MAP[severity]].min
+    end
+
+    def count
+      comments.size
     end
 
     def to_a

@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # encoding=utf-8
 
+require "English"
+
 $stdout.sync = true
 
 def info(text)
@@ -23,7 +25,13 @@ WARN_DISTANCE = 100
 ERROR_DISTANCE = 200
 
 def potentially_mergeable_changes
-  changes = Gergich::API.get("/changes/?q=status:open+p:#{PROJECT}+label:Verified=1+is:mergeable+branch:master&o=CURRENT_REVISION")
+  url = "/changes/?q=status:open+" \
+                    "p:#{PROJECT}+" \
+                    "label:Verified=1+" \
+                    "is:mergeable+" \
+                    "branch:master" \
+                 "&o=CURRENT_REVISION"
+  changes = Gergich::API.get(url)
   changes.select { |c| c["subject"] !~ /\Awip($|\W)/i }
 end
 
@@ -38,16 +46,20 @@ def maybe_bounce_commit!(commit)
   message = nil
   if distance > ERROR_DISTANCE
     score = -2
-    message = "This commit is probably not safe to merge (#{detail}). You'll need to rebase it to ensure all the tests still pass."
+    message = "This commit is probably not safe to merge (#{detail}). You'll " \
+              "need to rebase it to ensure all the tests still pass."
   elsif distance > WARN_DISTANCE
     score = -1
-    message = "This commit may not be safe to merge (#{detail}). Please rebase to make sure all the tests still pass."
+    message = "This commit may not be safe to merge (#{detail}). Please " \
+              "rebase to make sure all the tests still pass."
   end
 
   review = Gergich::Review.new(commit, draft)
   previous_score = review.previous_score
 
-  puts "#{detail}, " + (score == previous_score ? "score still #{score}" : "changing score from #{previous_score} to #{score}")
+  puts "#{detail}, " + (score == previous_score ?
+                        "score still #{score}" :
+                        "changing score from #{previous_score} to #{score}")
 
   # since we run on a daily cron, we might be checking the same patchset
   # many times, so bail if nothing has changed
@@ -72,7 +84,7 @@ commands["help"] = {
     subcommand_info = commands[subcommand]
     if !subcommand_info
       error "Unrecognized command `#{subcommand}`; Run `master_bouncer help` for more info"
-    elsif help_text = subcommand_info[:help]
+    elsif (help_text = subcommand_info[:help])
       info help_text.respond_to?(:call) ? help_text.call : help_text
     else
       error "No help available for `#{subcommand}`"
@@ -87,13 +99,14 @@ commands["help"] = {
         "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
       }
       .compact
-    "Usage: master_bouncer <command> [<args>...]\n\n#{commands_help.join("\n")}\n\nTip: run `master_bouncer help <command>` for more info"
+    "Usage: master_bouncer <command> [<args>...]\n\n#{commands_help.join("\n")}\n\n" \
+    "Tip: run `master_bouncer help <command>` for more info"
   }
 }
 
 commands["check"] = {
   summary: "Check the current commit's age",
-  action: ->(args) {
+  action: ->(_args) {
     maybe_bounce_commit! Gergich::Commit.new
   },
   help: ->() {
@@ -108,11 +121,11 @@ TEXT
 
 commands["check_all"] = {
   summary: "Check the age of all potentially mergeable changes",
-  action: ->(args) {
+  action: ->(_args) {
     Gergich.git("fetch")
 
     potentially_mergeable_changes.each do |change|
-      print "Checking g/#{change["_number"]}... "
+      print "Checking g/#{change['_number']}... "
 
       sha = change["current_revision"]
       revinfo = change["revisions"][sha]
@@ -138,7 +151,7 @@ if commands[command]
   begin
     commands[command][:action].call(ARGV)
   rescue
-    error($!)
+    error($ERROR_INFO)
   end
 else
   error("Unrecognized command `#{command}`; Run `master_bouncer help` for more info")

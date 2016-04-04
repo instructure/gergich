@@ -1,19 +1,21 @@
 require_relative "../lib/gergich"
 
-describe Gergich::Draft do
+RSpec.describe Gergich::Draft do
   let!(:draft) do
-    commit = double(:commit,
+    commit = double(:commit, {
       files: [
         "foo.rb",
         "bar/baz.lol"
       ],
       revision_id: "test",
       change_id: "test"
-    )
+    })
     described_class.new commit
   end
 
-  after { draft.reset! }
+  after do
+    draft.reset!
+  end
 
   describe "#info" do
     subject { draft.info }
@@ -23,12 +25,12 @@ describe Gergich::Draft do
 
       it "includes file comments" do
         draft.add_comment "foo.rb", 1, "fix foo", "info"
-        expect(subject).to eq({"foo.rb" => [{line: 1, message: "[INFO] fix foo"}]})
+        expect(subject).to eq({ "foo.rb" => [{ line: 1, message: "[INFO] fix foo" }] })
       end
 
       it "includes COMMIT_MSG comments" do
         draft.add_comment "/COMMIT_MSG", 1, "fix commit", "info"
-        expect(subject).to eq({"/COMMIT_MSG" => [{line: 1, message: "[INFO] fix commit"}]})
+        expect(subject).to eq({ "/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }] })
       end
 
       it "doesn't include orphaned file comments" do
