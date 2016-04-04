@@ -308,6 +308,7 @@ module Gergich
     #            Code-Review score (0, -1, or -2 respectively)
     def add_comment(path, position, message, severity)
       raise "invalid position `#{position}`" unless valid_position?(position)
+      position = position.to_json if position.is_a?(Hash)
       raise "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
       raise "no message specified" unless message.is_a?(String) && !message.empty?
 
@@ -377,7 +378,7 @@ module Gergich
         {
           comments: comments,
           cover_message: cover_message,
-          total_comments: comments.map(&:count).inject(&:+),
+          total_comments: all_comments.map(&:count).inject(&:+),
           score: labels["Code-Review"],
           labels: labels
         }
@@ -402,6 +403,8 @@ module Gergich
           end
         end
       end
+
+      message
     end
 
     def cover_message
@@ -437,6 +440,7 @@ module Gergich
       comments.map do |position, position_comments|
         comment = position_comments.join("\n\n")
         position_key = position.is_a?(Fixnum) ? :line : :range
+        position = JSON.parse(position) unless position.is_a?(Fixnum)
         {
           :message => comment,
           position_key => position
