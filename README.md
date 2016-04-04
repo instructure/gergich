@@ -32,8 +32,12 @@ use (ideally not your own). With your shiny new username and password in
 hand, set `GERGICH_USER` and `GERGICH_KEY` accordingly in your CI
 environment.
 
-Assuming you have Gergich installed somewhere on your CI node, ensure its
-`bin` directory is in your `PATH`
+Additionally, Gergich needs to know where your Gerrit installation
+lives, so be sure to set `GERRIT_BASE_URL` (e.g.
+`https://gerrit.example.com`) or `GERRIT_HOST` (e.g. `gerrit.example.com`).
+
+Lastly, assuming you have Gergich installed somewhere on your CI node,
+ensure its `bin` directory is in your `PATH`
 
 ## Usage
 

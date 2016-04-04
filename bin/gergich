@@ -2,6 +2,7 @@
 # encoding=utf-8
 
 require_relative "../lib/gergich"
+require "shellwords"
 
 def info(text)
   puts text
@@ -229,7 +230,7 @@ if commands[command]
   begin
     commands[command][:action].call(ARGV)
   rescue
-    error($!)
+    error($!.to_s + "\n" + $!.backtrace.join("\n"))
   end
 else
   error("Unrecognized command `#{command}`; Run `gergich help` for more info")

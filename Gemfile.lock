@@ -2,6 +2,11 @@ GEM
   remote: https://rubygems.org/
   specs:
     diff-lcs (1.2.5)
+    httparty (0.13.7)
+      json (~> 1.8)
+      multi_xml (>= 0.5.2)
+    json (1.8.3)
+    multi_xml (0.5.5)
     rspec (3.2.0)
       rspec-core (~> 3.2.0)
       rspec-expectations (~> 3.2.0)
@@ -21,5 +26,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  httparty
   rspec (~> 3.2)
   sqlite3
+
+BUNDLED WITH
+   1.10.6

@@ -1,19 +1,16 @@
 require "sqlite3"
 require "json"
 require "fileutils"
-require "shellwords"
+require "httparty"
 
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
+GERGICH_GIT_PATH = ENV.fetch("GERGICH_GIT_PATH", ".")
 
 module Gergich
   def self.git(args)
-    Dir.chdir(git_dir) do
+    Dir.chdir(GERGICH_GIT_PATH) do
       `git #{args} 2>/dev/null`
     end
-  end
-
-  def self.git_dir
-    ENV["GERGICH_GIT_PATH"] || "."
   end
 
   class Commit
@@ -168,29 +165,41 @@ module Gergich
   class API
     class << self
       def get(url)
-        curl(url)
+        perform(:get, url)
       end
 
       def post(url, body)
-        curl(url, "-H \"Content-Type: application/json\" --data-binary #{Shellwords.escape(body)}")
+        perform(:post, url, body)
       end
 
       def put(url, body)
-        curl(url, "-X PUT -H \"Content-Type: application/json\" --data-binary #{Shellwords.escape(body)}")
+        perform(:put, url, body)
       end
 
       private
 
-      # there's no built-in ruby http digest auth, and to make this portable
-      # we can't relay on HTTParty or others being present. but curl is
-      # everywhere :)
-      def curl(path, extras = nil)
-        raise "No GERGICH_KEY set" if !ENV['GERGICH_KEY']
-        ret = `curl --digest -u #{GERGICH_USER}:#{ENV["GERGICH_KEY"]} #{extras} "https://gerrit.instructure.com/a#{path}" 2>/dev/null`
+      def perform(method, url, body = nil)
+        options = base_options
+        options.merge!({ headers: {"Content-Type" => "application/json"}, body: body }) if body
+        ret = HTTParty.send(method, url, options).body
         json = if ret.sub!(/\A\)\]\}'\n/, '') && ret =~ /\A("|\[|\{)/
           JSON.parse(ret) rescue nil
         end
         json || raise("Non-JSON response: #{ret}")
+      end
+
+      def base_uri
+        @base_url ||= ENV.fetch("GERRIT_BASE_URL", ENV.key?("GERRIT_HOST") ? "https://#{ENV["GERRIT_HOST"]}" : raise("need to set GERRIT_BASE_URL or GERRIT_HOST"))
+      end
+
+      def base_options
+        {
+          base_uri: base_uri + "/a",
+          digest_auth: {
+            username: GERGICH_USER,
+            password: ENV.fetch("GERGICH_KEY")
+          }
+        }
       end
     end
   end
