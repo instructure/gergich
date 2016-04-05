@@ -6,6 +6,8 @@ require "httparty"
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
 GERGICH_GIT_PATH = ENV.fetch("GERGICH_GIT_PATH", ".")
 
+GergichError = Class.new(StandardError)
+
 module Gergich
   def self.git(args)
     Dir.chdir(GERGICH_GIT_PATH) do
@@ -40,6 +42,7 @@ module Gergich
     def revision_number
       @revision_number ||= begin
         gerrit_info = API.get("/changes/?q=#{change_id}&o=ALL_REVISIONS")[0]
+        raise GergichError, "Gerrit patchset not found" unless gerrit_info
         gerrit_info["revisions"][revision_id]["_number"]
       end
     end

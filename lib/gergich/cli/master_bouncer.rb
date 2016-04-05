@@ -1,0 +1,109 @@
+require_relative "../cli"
+
+ENV["GERGICH_USER"] = ENV.fetch("MASTER_BOUNCER_USER", "master_bouncer")
+ENV["GERGICH_KEY"] = ENV["MASTER_BOUNCER_KEY"] || error("no MASTER_BOUNCER_KEY set")
+
+require_relative "../../gergich"
+
+PROJECT = ENV["GERRIT_PROJECT"] || error("no GERRIT_PROJECT set")
+# TODO: configurable thresholds per-project, also time-based thresholds
+WARN_DISTANCE = 100
+ERROR_DISTANCE = 200
+
+def potentially_mergeable_changes
+  url = "/changes/?q=status:open+" \
+                    "p:#{PROJECT}+" \
+                    "label:Verified=1+" \
+                    "is:mergeable+" \
+                    "branch:master" \
+                 "&o=CURRENT_REVISION"
+  changes = Gergich::API.get(url)
+  changes.select { |c| c["subject"] !~ /\Awip($|\W)/i }
+end
+
+def maybe_bounce_commit!(commit)
+  draft = Gergich::Draft.new(commit)
+  draft.reset!
+
+  distance = Gergich.git("rev-list origin/master ^#{commit.ref} --count").to_i
+  detail = "#{distance} commits behind master"
+
+  score = 0
+  message = nil
+  if distance > ERROR_DISTANCE
+    score = -2
+    message = "This commit is probably not safe to merge (#{detail}). You'll " \
+              "need to rebase it to ensure all the tests still pass."
+  elsif distance > WARN_DISTANCE
+    score = -1
+    message = "This commit may not be safe to merge (#{detail}). Please " \
+              "rebase to make sure all the tests still pass."
+  end
+
+  review = Gergich::Review.new(commit, draft)
+  previous_score = review.previous_score
+
+  puts "#{detail}, " + (score == previous_score ?
+                        "score still #{score}" :
+                        "changing score from #{previous_score} to #{score}")
+
+  # since we run on a daily cron, we might be checking the same patchset
+  # many times, so bail if nothing has changed
+  return if score == previous_score
+
+  draft.add_label "Code-Review", score
+  draft.add_message message if message
+
+  # otherwise we always publish ... even in the score=0 case it's
+  # important, as we might be undoing a previous negative score.
+  # similarly, over time the same patchset will become more out of date,
+  # so we allow_repost (so to speak) so we can add increasingly negative
+  # reviews
+  review.publish!(:allow_repost)
+end
+
+commands = {}
+
+commands["check"] = {
+  summary: "Check the current commit's age",
+  action: ->(_args) {
+    maybe_bounce_commit! Gergich::Commit.new
+  },
+  help: ->() {
+    <<-TEXT
+master_bouncer check
+
+Check the current commit's age, and bounce it if it's too old (-1 or -2,
+depending on the threshold)
+TEXT
+  }
+}
+
+commands["check_all"] = {
+  summary: "Check the age of all potentially mergeable changes",
+  action: ->(_args) {
+    Gergich.git("fetch")
+
+    potentially_mergeable_changes.each do |change|
+      print "Checking g/#{change['_number']}... "
+
+      sha = change["current_revision"]
+      revinfo = change["revisions"][sha]
+      refspec = revinfo["ref"]
+      number = revinfo["_number"]
+      Gergich.git("fetch ssh://gerrit.instructure.com:29418/#{PROJECT} #{refspec}")
+
+      maybe_bounce_commit! Gergich::Commit.new(sha, number)
+      sleep 1
+    end
+  },
+  help: ->() {
+    <<-TEXT
+master_bouncer check_all
+
+Check all open Verified+1 patchsets and bounce any that are too old.
+TEXT
+  }
+}
+
+run_app commands

@@ -1,18 +1,7 @@
 # encoding=utf-8
 
+require_relative "../cli"
 require_relative "../../gergich"
-require "shellwords"
-require "English"
-
-def info(text)
-  puts text
-  exit
-end
-
-def error(text)
-  $stderr.puts "Error: #{text}"
-  exit 1
-end
 
 CI_TEST_ARGS = {
   "comment" => [
@@ -45,41 +34,17 @@ def run_ci_test!(all_commands)
   commands.each do |command, args = []|
     arglist = args.map { |arg| Shellwords.escape(arg.to_s) }
     output = `bin/gergich #{command} #{arglist.join(" ")} 2>&1`
-    error("`gergich citest` failed on step `#{command}`: #{output}") unless $CHILD_STATUS.success?
+    unless $CHILD_STATUS.success?
+      error "`gergich citest` failed on step `#{command}`:\n\n#{output.gsub(/^/, '  ')}\n"
+    end
   end
 end
 
 commands = {}
 
-commands["help"] = {
-  action: ->(args) {
-    subcommand = args.shift || "help"
-    subcommand_info = commands[subcommand]
-    if !subcommand_info
-      error "Unrecognized command `#{subcommand}`; Run `gergich help` for more info"
-    elsif (help_text = subcommand_info[:help])
-      info help_text.respond_to?(:call) ? help_text.call : help_text
-    else
-      error "No help available for `#{subcommand}`"
-    end
-  },
-  help: -> {
-    indentation = commands.keys.map(&:size).sort.last
-    commands_help = commands
-      .to_a
-      .sort_by(&:first)
-      .map { |key, data|
-        "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
-      }
-      .compact
-    "Usage: gergich <command> [<args>...]\n\n#{commands_help.join("\n")}\n\n" \
-    "Tip: run `gergich help <command>` for more info"
-  }
-}
-
 commands["reset"] = {
   summary: "Clear out pending comments/labels/messages for this patchset",
-  action: ->(_args) {
+  action: ->() {
     Gergich::Draft.new.reset!
   },
   help: -> {
@@ -93,7 +58,7 @@ TEXT
 
 commands["publish"] = {
   summary: "Publish the draft for this patchset",
-  action: ->(_args) {
+  action: ->() {
     if (data = Gergich::Review.new.publish!)
       puts "Published #{data[:total_comments]} comments, set score to #{data[:score]}"
     else
@@ -116,7 +81,7 @@ TEXT
 
 commands["status"] = {
   summary: "Show the current draft for this patchset",
-  action: ->(_args) {
+  action: ->() {
     Gergich::Review.new.status
   },
   help: -> {
@@ -133,11 +98,11 @@ TEXT
 
 commands["comment"] = {
   summary: "Add one or more draft comments to this patchset",
-  action: ->(args) {
+  action: ->(comment_data) {
     comment_data = begin
-      JSON.parse(args.shift)
+      JSON.parse(comment_data)
     rescue JSON::ParserError
-      error("Unable to parse <comment_data> json")
+      error("Unable to parse <comment_data> json", "comment")
     end
     comment_data = [comment_data] unless comment_data.is_a?(Array)
 
@@ -184,8 +149,7 @@ TEXT
 
 commands["message"] = {
   summary: "Add a draft cover message to this patchset",
-  action: ->(args) {
-    message = args.shift
+  action: ->(message) {
     draft = Gergich::Draft.new
     draft.add_message message
   },
@@ -201,11 +165,8 @@ TEXT
 
 commands["label"] = {
   summary: "Add a draft label (e.g. Code-Review -1) to this patchset",
-  action: ->(args) {
-    label = args.shift
-    score = args.shift
-    draft = Gergich::Draft.new
-    draft.add_label label, score
+  action: ->(label, score) {
+    Gergich::Draft.new.add_label label, score
   },
   help: ->() {
     <<-TEXT
@@ -222,7 +183,7 @@ TEXT
 
 commands["citest"] = {
   summary: "Do a full gergich test based on the current commit",
-  action: ->(_args) {
+  action: ->() {
     # automagically test any new command that comes along
     run_ci_test!(commands.keys)
   },
@@ -243,13 +204,4 @@ following:
   }
 }
 
-command = ARGV.shift || "help"
-if commands[command]
-  begin
-    commands[command][:action].call(ARGV)
-  rescue
-    error($ERROR_INFO.to_s + "\n" + $ERROR_INFO.backtrace.join("\n"))
-  end
-else
-  error("Unrecognized command `#{command}`; Run `gergich help` for more info")
-end
+run_app commands
