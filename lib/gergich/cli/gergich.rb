@@ -13,7 +13,12 @@ CI_TEST_ARGS = {
     ].to_json
   ],
   "label" => ["Code-Review", 1],
-  "message" => ["this is a test"]
+  "message" => ["this is a test"],
+  "capture" => ["rubocop", "echo #{Shellwords.escape(<<-OUTPUT)}"]
+bin/gergich:47:8: C: Prefer double-quoted strings
+if ENV['DEBUG']
+       ^^^^^^^
+OUTPUT
 }.freeze
 
 def run_ci_test!(all_commands)
@@ -177,6 +182,41 @@ times, the lowest score will win.
 
 <label>  - a valid label (e.g. "Code-Review")
 <score>  - a valid score (e.g. -1)
+TEXT
+  }
+}
+
+commands["capture"] = {
+  summary: "Run a command and translate its output into `gergich comment` calls",
+  action: ->(format, command) {
+    require_relative "../../gergich/capture"
+    exit Gergich::Capture.run(format, command)
+  },
+  help: ->() {
+    <<-TEXT
+gergich capture <format> <command>
+
+For common linting formats, `gergich capture` can be used to automatically
+do `gergich comment` calls so you don't have to wire it up yourself.
+
+<format>        - One of the following:
+                  * rubocop
+                  * eslint
+                  * i18nliner
+                  * custom:<path>:<class_name> - file path and ruby
+                    class_name of a custom formatter.
+
+<command>       - The command to run whose output conforms to <format>
+
+Examples:
+    gergich capture rubocop "bundle exec rubocop"
+
+    gergich capture eslint eslint
+
+    gergich capture i18nliner "rake i18nliner:check"
+
+    gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
+
 TEXT
   }
 }

@@ -42,11 +42,11 @@ ensure its `bin` directory is in your `PATH`
 ## Usage
 
 Run `gergich help` for detailed information about all supported commands.
-In your build scripts, you'll typically be using `gergich comment` and
-`gergich publish`. Comments are stored locally in a sqlite database until
-you publish. This way you can queue up comments from many disparate
-processes. Comments are published to `HEAD`'s corresponding patchset in
-Gerrit (based on Change-Id + `<sha>`)
+In your build scripts, you'll typically be using `gergich comment`,
+`gergich capture` and `gergich publish`. Comments are stored locally in a
+sqlite database until you publish. This way you can queue up comments from
+many disparate processes. Comments are published to `HEAD`'s corresponding
+patchset in Gerrit (based on Change-Id + `<sha>`)
 
 ### `gergich comment <comment_data>`
 
@@ -78,6 +78,49 @@ gergich comment '{"path":"bar.rb","severity":"warn",
                   "position":{"start_line":3,"start_character":5,...},
                   "message":"¯\_(ツ)_/¯"}'
 gergich comment '[{"path":"baz.rb",...}, {...}, {...}]'
+```
+
+### `gergich capture <format> <command>`
+
+For common linting formats, `gergich capture` can be used to automatically
+do `gergich comment` calls so you don't have to wire it up yourself.
+
+`<format>` - One of the following:
+
+* `rubocop`
+* `eslint`
+* `i18nliner`
+* `custom:<path>:<class_name>` - file path and ruby class_name of a custom
+  formatter.
+
+`<command>` - The command to run whose output corresponds to `<format>`
+
+#### Custom formatters:
+
+To create a custom formatter, create a class that implements a `run`
+method that takes a string of command output and returns an array of
+comment hashes (see `gergich comment`'s `<comment_data>` format), e.g.
+
+```ruby
+class MyFormatter
+  def run(output)
+    output.scan(/^Oh noes! (.+?):(\d+): (.*)$/).map do |file, line, error|
+      { path: file, message: error, position: line.to_i, severity: "error" }
+    end
+  end
+end
+```
+
+#### Examples:
+
+```bash
+gergich capture rubocop "bundle exec rubocop"
+
+gergich capture eslint eslint
+
+gergich capture i18nliner "rake i18nliner:check"
+
+gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
 ```
 
 ### `gergich publish`
