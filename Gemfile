@@ -1,7 +1,9 @@
 source "https://rubygems.org"
 
-gem "sqlite3"
-gem "httparty"
-gem "rubocop"
-gem "simplecov"
-gem "rspec", "~> 3.2"
+gemspec
+
+group :development, :test do
+  gem "rubocop"
+  gem "simplecov"
+  gem "rspec", "~> 3.2"
+end

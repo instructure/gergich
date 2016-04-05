@@ -27,17 +27,19 @@ revision, unless you set up different credentials for each.
 
 ## Installation
 
-Before you can use Gergich, you need a Gerrit user whose credentials it'll
-use (ideally not your own). With your shiny new username and password in
-hand, set `GERGICH_USER` and `GERGICH_KEY` accordingly in your CI
-environment.
+Add the following to your Gemfile (perhaps in your `:test` group?):
+
+```ruby
+gem "gergich"
+```
+
+To use Gergich, you'll need a Gerrit user whose credentials it'll use
+(ideally not your own). With your shiny new username and password in hand,
+set `GERGICH_USER` and `GERGICH_KEY` accordingly in your CI environment.
 
 Additionally, Gergich needs to know where your Gerrit installation
 lives, so be sure to set `GERRIT_BASE_URL` (e.g.
 `https://gerrit.example.com`) or `GERRIT_HOST` (e.g. `gerrit.example.com`).
-
-Lastly, assuming you have Gergich installed somewhere on your CI node,
-ensure its `bin` directory is in your `PATH`
 
 ## Usage
 
