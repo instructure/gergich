@@ -3,6 +3,7 @@ require "json"
 require "fileutils"
 require "httparty"
 
+GERGICH_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
 GERGICH_GIT_PATH = ENV.fetch("GERGICH_GIT_PATH", ".")
 
@@ -331,12 +332,12 @@ module Gergich
 
     def labels
       @labels ||= begin
-        labels = { "Code-Review" => 0 }
+        labels = { GERGICH_REVIEW_LABEL => 0 }
         db.execute("SELECT name, MIN(score) AS score FROM labels GROUP BY name").each do |row|
           labels[row["name"]] = row["score"]
         end
         score = min_comment_score
-        labels["Code-Review"] = score if score < 0 && score < labels["Code-Review"]
+        labels[GERGICH_REVIEW_LABEL] = score if score < 0 && score < labels[GERGICH_REVIEW_LABEL]
         labels
       end
     end
@@ -382,7 +383,7 @@ module Gergich
           comments: comments,
           cover_message: cover_message,
           total_comments: all_comments.map(&:count).inject(&:+),
-          score: labels["Code-Review"],
+          score: labels[GERGICH_REVIEW_LABEL],
           labels: labels
         }
       end
@@ -411,7 +412,7 @@ module Gergich
     end
 
     def cover_message
-      score = labels["Code-Review"]
+      score = labels[GERGICH_REVIEW_LABEL]
       parts = messages
       parts.unshift score.to_s if score < 0
 
