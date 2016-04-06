@@ -1,0 +1,15 @@
+sudo: false
+cache: bundler
+language: ruby
+rvm:
+  - 2.3.0
+before_install: gem update --remote bundler
+install:
+  - bundle install --retry=3
+script:
+  - bundle exec rubocop
+  - bundle exec rspec
+notifications:
+  email:
+    on_success: never
+    on_failure: never
