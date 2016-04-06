@@ -1,5 +1,7 @@
 # Gergich
 
+[![Gem Version](https://badge.fury.io/rb/gergich.svg)](https://rubygems.org/gems/gergich)
+
 Gergich is a command-line tool (and ruby lib) for easily posting comments
 on a [Gerrit](https://www.gerritcodereview.com/) review from a CI
 environment. It can be wired up to linters (rubocop, eslint, etc.) so that
