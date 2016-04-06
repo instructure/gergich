@@ -206,7 +206,11 @@ do `gergich comment` calls so you don't have to wire it up yourself.
                   * custom:<path>:<class_name> - file path and ruby
                     class_name of a custom formatter.
 
-<command>       - The command to run whose output conforms to <format>
+<command>       - The command to run whose output conforms to <format>.
+                  Output from the command will still go to STDOUT, and
+                  Gergich will preserve its exit status.
+                  If command is "-", Gergich will simply read from STDIN
+                  and the exit status will always be 0.
 
 Examples:
     gergich capture rubocop "bundle exec rubocop"
@@ -217,6 +221,8 @@ Examples:
 
     gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
 
+    docker-compose run --rm web eslint | gergich capture eslint -
+    # you might be interested in $PIPESTATUS[0]
 TEXT
   }
 }

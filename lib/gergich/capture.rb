@@ -32,16 +32,27 @@ module Gergich
       end
 
       def run_command(command)
-        output = ""
-        IO.popen("#{command} 2>&1", "r+") do |io|
-          io.each do |line|
-            puts line
-            output << line
+        exit_code = 0
+
+        if command == "-"
+          output = wiretap($stdin)
+        else
+          IO.popen("#{command} 2>&1", "r+") do |io|
+            output = wiretap(io)
           end
+          exit_code = $CHILD_STATUS.exitstatus
         end
-        exit_code = $CHILD_STATUS && $CHILD_STATUS.exitstatus || 0
 
         [exit_code, output]
+      end
+
+      def wiretap(io)
+        output = ""
+        io.each do |line|
+          puts line
+          output << line
+        end
+        output
       end
 
       def load_captor(format)
