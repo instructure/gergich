@@ -28,13 +28,21 @@ OUTPUT
     it "should catch errors" do
       allow(described_class).to receive(:run_command).and_return([0, <<-OUTPUT])
 jsapp/models/user.js
-  4:21  error  Missing semicolon  semi
+  4:21  error    Missing semicolon  semi
+  5:1   warning  Too much cowbell   cowbell-overload
 OUTPUT
       expect(draft).to receive(:add_comment).with(
         "jsapp/models/user.js",
         4,
         "[eslint] Missing semicolon",
         "error"
+      )
+
+      expect(draft).to receive(:add_comment).with(
+        "jsapp/models/user.js",
+        5,
+        "[eslint] Too much cowbell",
+        "warn"
       )
       described_class.run("eslint", "false")
     end
