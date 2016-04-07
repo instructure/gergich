@@ -36,6 +36,8 @@ export COVERAGE=1
 
 run_command bundle exec rspec
 run_command bin/gergich citest
+run_command bin/master_bouncer check
+DRY_RUN=1 run_command bin/master_bouncer check_all
 
 run_command bin/check_coverage
 

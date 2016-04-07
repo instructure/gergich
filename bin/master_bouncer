@@ -1,4 +1,9 @@
 #!/usr/bin/env ruby
 # encoding=utf-8
 
+if ENV["COVERAGE"]
+  require "simplecov"
+  SimpleCov.command_name "master_bouncer:#{ARGV.join(' ')}"
+end
+
 require_relative "../lib/gergich/cli/master_bouncer"

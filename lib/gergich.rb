@@ -202,7 +202,7 @@ module Gergich
         @base_url ||= \
           ENV["GERRIT_BASE_URL"] ||
           ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}" ||
-          raise("need to set GERRIT_BASE_URL or GERRIT_HOST")
+          raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
       def base_options
@@ -281,8 +281,8 @@ module Gergich
     # a higher score set here.
     def add_label(name, score)
       score = score.to_i
-      raise "invalid score" if score < -2 || score > 1
-      raise "can't set #{name}" if %w[Verified].include?(name)
+      raise GergichError, "invalid score" if score < -2 || score > 1
+      raise GergichError, "can't set #{name}" if %w[Verified].include?(name)
 
       db.execute "INSERT INTO labels (name, score) VALUES (?, ?)",
                  [name, score]
@@ -311,10 +311,10 @@ module Gergich
     #            severe comment will be used to determine the overall
     #            Code-Review score (0, -1, or -2 respectively)
     def add_comment(path, position, message, severity)
-      raise "invalid position `#{position}`" unless valid_position?(position)
+      raise GergichError, "invalid position `#{position}`" unless valid_position?(position)
       position = position.to_json if position.is_a?(Hash)
-      raise "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
-      raise "no message specified" unless message.is_a?(String) && !message.empty?
+      raise GergichError, "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
+      raise GergichError, "no message specified" unless message.is_a?(String) && !message.empty?
 
       db.execute "INSERT INTO comments (path, position, message, severity) VALUES (?, ?, ?, ?)",
                  [path, position, message, severity]

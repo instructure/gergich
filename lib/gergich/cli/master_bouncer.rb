@@ -66,7 +66,7 @@ commands = {}
 
 commands["check"] = {
   summary: "Check the current commit's age",
-  action: ->(_args) {
+  action: ->() {
     maybe_bounce_commit! Gergich::Commit.new
   },
   help: ->() {
@@ -81,17 +81,19 @@ TEXT
 
 commands["check_all"] = {
   summary: "Check the age of all potentially mergeable changes",
-  action: ->(_args) {
+  action: ->() {
     Gergich.git("fetch")
+    gerrit_host = ENV["GERRIT_HOST"] || error("No GERRIT_HOST set")
 
     potentially_mergeable_changes.each do |change|
-      print "Checking g/#{change['_number']}... "
-
       sha = change["current_revision"]
       revinfo = change["revisions"][sha]
       refspec = revinfo["ref"]
       number = revinfo["_number"]
-      Gergich.git("fetch ssh://gerrit.instructure.com:29418/#{PROJECT} #{refspec}")
+      next if ENV["DRY_RUN"]
+
+      print "Checking g/#{change['_number']}... "
+      Gergich.git("fetch ssh://#{gerrit_host}:29418/#{PROJECT} #{refspec}")
 
       maybe_bounce_commit! Gergich::Commit.new(sha, number)
       sleep 1
