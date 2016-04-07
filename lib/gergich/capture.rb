@@ -49,7 +49,7 @@ module Gergich
       def wiretap(io)
         output = ""
         io.each do |line|
-          puts line
+          $stdout.puts line
           output << line
         end
         output

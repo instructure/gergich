@@ -85,12 +85,14 @@ commands["check_all"] = {
     Gergich.git("fetch")
     gerrit_host = ENV["GERRIT_HOST"] || error("No GERRIT_HOST set")
 
-    potentially_mergeable_changes.each do |change|
+    changes = potentially_mergeable_changes
+    next if ENV["DRY_RUN"]
+
+    changes.each do |change|
       sha = change["current_revision"]
       revinfo = change["revisions"][sha]
       refspec = revinfo["ref"]
       number = revinfo["_number"]
-      next if ENV["DRY_RUN"]
 
       print "Checking g/#{change['_number']}... "
       Gergich.git("fetch ssh://#{gerrit_host}:29418/#{PROJECT} #{refspec}")

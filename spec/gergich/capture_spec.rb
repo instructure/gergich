@@ -5,6 +5,11 @@ RSpec.describe Gergich::Capture do
 
   before do
     allow(Gergich::Draft).to receive(:new).and_return(draft)
+    $stdout = StringIO.new
+  end
+
+  after do
+    $stdout = STDOUT
   end
 
   context "rubocop" do
@@ -62,6 +67,63 @@ OUTPUT
         "error"
       )
       described_class.run("i18nliner", "false")
+    end
+  end
+
+  context "custom" do
+    class CustomCaptor
+      def run(output)
+        puts output
+        output.scan(/^(.+?):(\d+): (.*)$/).map do |file, line, error|
+          { path: file, message: error, position: line.to_i, severity: "error" }
+        end
+      end
+    end
+
+    it "should catch errors" do
+      allow(described_class).to receive(:run_command).and_return([0, <<-OUTPUT])
+foo.rb:1: you done screwed up
+OUTPUT
+      expect(draft).to receive(:add_comment).with(
+        "foo.rb",
+        1,
+        "you done screwed up",
+        "error"
+      )
+      described_class.run("custom:sqlite3:CustomCaptor", "false")
+    end
+  end
+
+  context "stdin" do
+    let :output do
+      <<-OUTPUT
+jsapp/models/user.js
+  4:21  error  Missing semicolon  semi
+OUTPUT
+    end
+
+    before do
+      $stdin = StringIO.new(output)
+    end
+
+    after do
+      $stdin = STDIN
+    end
+
+    it "should catch errors" do
+      expect(draft).to receive(:add_comment).with(
+        "jsapp/models/user.js",
+        4,
+        "[eslint] Missing semicolon",
+        "error"
+      )
+      described_class.run("eslint", "-")
+    end
+
+    it "shouldn't eat stdin" do
+      allow(draft).to receive(:add_comment)
+      expect($stdout).to receive(:puts).exactly(output.lines.size).times
+      described_class.run("eslint", "-")
     end
   end
 end

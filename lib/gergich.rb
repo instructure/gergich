@@ -73,11 +73,15 @@ module Gergich
       API.post(generate_url, generate_payload)
 
       # because why not
-      if rand < 0.01 && GERGICH_USER == "gergich"
+      if change_name?
         API.put("/accounts/self/name", { name: whats_his_face }.to_json)
       end
 
       review_info
+    end
+
+    def change_name?
+      ENV["GERGICH_CHANGE_NAME"] != "0" && rand < 0.01 && GERGICH_USER == "gergich"
     end
 
     def anything_to_publish?

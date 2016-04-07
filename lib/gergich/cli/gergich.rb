@@ -22,6 +22,7 @@ OUTPUT
 }.freeze
 
 def run_ci_test!(all_commands)
+  ENV["GERGICH_CHANGE_NAME"] = "0"
   commands_to_test = all_commands - %w[citest reset publish status]
   commands_to_test << "status" # put it at the end, so we maximize the stuff it tests
 
