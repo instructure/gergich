@@ -1,17 +1,29 @@
 module Gergich
   module Capture
     class RubocopCapture < BaseCapture
-      def run(output)
-        pattern = %r{                     # Example:
-          ^([^:\n]+):(\d+):\d+:\s(.*?)\n  #   bin/gergich:47:8: C: Prefer double-quoted strings
-          ([^\n]+\n                       #   if ENV['DEBUG']
-           [^^\n]*\^+[^^\n]*\n)?          #          ^^^^^^^
-        }mx
+      SEVERITY_MAP = {
+        "R" => "info",  # refactor
+        "C" => "info",  # convention
+        "W" => "warn",  # warning
+        "E" => "error", # error
+        "F" => "error"  # fatal
+      }.freeze
 
-        output.scan(pattern).map { |file, line, error, context|
+      def run(output)
+        # Example:
+        #   bin/gergich:47:8: C: Prefer double-quoted strings
+        #   if ENV['DEBUG']
+        #          ^^^^^^^
+        pattern = /
+          ^([^:\n]+):(\d+):\d+:\s(\w):\s(.*?)\n
+          ([^\n]+\n
+           [^^\n]*\^+[^^\n]*\n)?
+        /mx
+
+        output.scan(pattern).map { |file, line, severity, error, context|
           context = "\n\n" + context.gsub(/^/, " ") if context
           { path: file, message: "[rubocop] #{error}#{context}",
-            position: line.to_i, severity: "error" }
+            position: line.to_i, severity: SEVERITY_MAP[severity] }
         }.compact
       end
     end

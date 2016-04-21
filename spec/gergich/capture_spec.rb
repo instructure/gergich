@@ -18,13 +18,23 @@ RSpec.describe Gergich::Capture do
 bin/gergich:47:8: C: Prefer double-quoted strings
 if ENV['DEBUG']
        ^^^^^^^
+lib/gergich.rb:22:55: W: Line is too long. [55/54]
+    def initialize(ref = "HEAD", revision_number = nil)
+                                                     ^^
 OUTPUT
       expect(draft).to receive(:add_comment).with(
         "bin/gergich",
         47,
-        "[rubocop] C: Prefer double-quoted strings\n\n if ENV['DEBUG']\n        ^^^^^^^\n",
-        "error"
+        "[rubocop] Prefer double-quoted strings\n\n if ENV['DEBUG']\n        ^^^^^^^\n",
+        "info"
       )
+      expect(draft).to receive(:add_comment)
+        .with("lib/gergich.rb", 22, <<-OUTPUT, "warn")
+[rubocop] Line is too long. [55/54]
+
+     def initialize(ref = "HEAD", revision_number = nil)
+                                                      ^^
+OUTPUT
       described_class.run("rubocop", "false")
     end
   end

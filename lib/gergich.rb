@@ -228,7 +228,7 @@ module Gergich
       "error" => -2
     }.freeze
 
-    attr_reader :db, :commit
+    attr_reader :commit
 
     def initialize(commit = Commit.new)
       @commit = commit
