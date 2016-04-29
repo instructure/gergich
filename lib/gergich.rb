@@ -196,7 +196,7 @@ module Gergich
         end
         ret = HTTParty.send(method, url, options).body
         if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
-          JSON.parse(ret)
+          JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         else
           raise("Non-JSON response: #{ret}")
         end
