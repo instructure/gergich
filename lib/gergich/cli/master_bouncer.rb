@@ -2,6 +2,7 @@ require_relative "../cli"
 
 ENV["GERGICH_USER"] = ENV.fetch("MASTER_BOUNCER_USER", "master_bouncer")
 ENV["GERGICH_KEY"] = ENV["MASTER_BOUNCER_KEY"] || error("no MASTER_BOUNCER_KEY set")
+MASTER_BOUNCER_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 
 require_relative "../../gergich"
 
@@ -51,7 +52,7 @@ def maybe_bounce_commit!(commit)
   # many times, so bail if nothing has changed
   return if score == previous_score
 
-  draft.add_label "Code-Review", score
+  draft.add_label MASTER_BOUNCER_REVIEW_LABEL, score
   draft.add_message message if message
 
   # otherwise we always publish ... even in the score=0 case it's
