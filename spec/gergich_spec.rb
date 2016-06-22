@@ -1,5 +1,18 @@
 require_relative "../lib/gergich"
 
+RSpec.describe Gergich::API do
+  let(:result) { double(:result, { body: "Not Found: 1234" }) }
+
+  before :each do
+    allow(HTTParty).to receive(:send).and_return(result)
+    allow(described_class).to receive(:base_options).and_return({})
+  end
+
+  it "provides helpful error when Change-Id not found" do
+    expect { described_class.get("/a/changes/1234") }.to raise_error(/Cannot find Change-Id: 1234/)
+  end
+end
+
 RSpec.describe Gergich::Draft do
   let!(:draft) do
     commit = double(:commit, {
