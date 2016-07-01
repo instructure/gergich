@@ -6,4 +6,5 @@ group :development, :test do
   gem "rubocop"
   gem "simplecov"
   gem "rspec", "~> 3.2"
+  gem "rake"
 end
