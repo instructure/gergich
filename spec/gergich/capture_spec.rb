@@ -73,6 +73,54 @@ OUTPUT
     end
   end
 
+  context "androidlint" do
+    it "should catch errors" do
+      rtl_hardcoded = 'Consider adding android:drawableStart="@drawable/a_media" to better support right-to-left layouts [RtlHardcoded]'
+      rtl_enabled = "The project references RTL attributes, but does not explicitly enable or disable RTL support with android:supportsRtl in the manifest [RtlEnabled]"
+      lint_error = 'No .class files were found in project "0.0.2", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]'
+      unused_quantity = 'For language "fr" (French) the following quantities are not relevant: few, zero [UnusedQuantity]'
+      allow(described_class).to receive(:run_command).and_return([0, <<-OUTPUT])
+/path/to/some.xml:27: Warning: #{rtl_hardcoded}
+    android:drawableLeft="@drawable/ic_cv_media"/>
+    ~~~~~~~~~~~~~~~~~~~~
+
+/path/to/AndroidManifest.xml: Warning: #{rtl_enabled}
+
+/path/to/library/0.0.2: Error: #{lint_error}
+
+/path/to/values.xml:5: Warning: #{unused_quantity}
+    <plurals name="number">
+    ^
+
+      OUTPUT
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/some.xml",
+        27,
+        "[androidlint] #{rtl_hardcoded}\n\n    android:drawableLeft=\"@drawable/ic_cv_media\"/>\n    ~~~~~~~~~~~~~~~~~~~~",
+        "warn"
+      )
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/AndroidManifest.xml",
+        0,
+        "[androidlint] #{rtl_enabled}",
+        "warn"
+      )
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/library/0.0.2",
+        0,
+        "[androidlint] #{lint_error}",
+        "error"
+      )
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/values.xml",
+        5,
+        "[androidlint] #{unused_quantity}\n\n    <plurals name=\"number\">\n    ^",
+        "warn"
+      )
+      described_class.run("androidlint", "false")
+    end
+  end
+
   context "eslint" do
     it "should catch errors" do
       allow(described_class).to receive(:run_command).and_return([0, <<-OUTPUT])
