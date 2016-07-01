@@ -1,4 +1,5 @@
 require_relative "../../lib/gergich/capture"
+require_relative "../../lib/gergich"
 
 RSpec.describe Gergich::Capture do
   let!(:draft) { double }
@@ -36,6 +37,39 @@ OUTPUT
                                                       ^^
 OUTPUT
       described_class.run("rubocop", "false")
+    end
+  end
+
+  # rubocop:disable Metrics/LineLength
+  context "swiftlint" do
+    it "should catch errors" do
+      colon_violation = "Colon Violation: Colons should be next to the identifier when specifying a type. (colon)"
+      line_length_violation = "Line Length Violation: Line should be 100 characters or less: currently 129 characters (line_length)"
+      force_cast_violation = "Force Cast Violation: Force casts should be avoided. (force_cast)"
+      allow(described_class).to receive(:run_command).and_return([0, <<-OUTPUT])
+/path/to/My.swift:13:22: warning: #{colon_violation}
+/path/to/Fail.swift:76: warning: #{line_length_violation}
+/path/to/Cast.swift:15:9: error: #{force_cast_violation}
+      OUTPUT
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/My.swift",
+        13,
+        "[swiftlint] #{colon_violation}",
+        "warn"
+      )
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/Fail.swift",
+        76,
+        "[swiftlint] #{line_length_violation}",
+        "warn"
+      )
+      expect(draft).to receive(:add_comment).with(
+        "/path/to/Cast.swift",
+        15,
+        "[swiftlint] #{force_cast_violation}",
+        "error"
+      )
+      described_class.run("swiftlint", "false")
     end
   end
 
