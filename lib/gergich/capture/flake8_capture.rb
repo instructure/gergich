@@ -10,9 +10,8 @@ module Gergich
 
         output.scan(pattern).map { |file, line, error|
           { path: file, message: "[flake8] #{error}",
-            position: line.to_i, severity: "error"}
+            position: line.to_i, severity: "error" }
         }.compact
-
       end
     end
   end
