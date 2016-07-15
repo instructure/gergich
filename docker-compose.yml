@@ -1,10 +1,10 @@
 test:
   build: .
-  volumes:
-    - "./coverage:/app/coverage"
   environment:
     GERGICH_KEY: "${GERGICH_KEY}"
     GERRIT_HOST: "${GERRIT_HOST}"
+    GERRIT_CHANGE_ID: "${GERRIT_CHANGE_ID}"
+    GERRIT_PATCHSET_REVISION: "${GERRIT_PATCHSET_REVISION}"
     GERRIT_PROJECT: "${GERRIT_PROJECT}"
     GEMNASIUM_ENABLED: "${GEMNASIUM_ENABLED}"
     GEMNASIUM_PROJECT_SLUG: cc6fb44edee9fcf855cec82d3b6aed0f

@@ -5,7 +5,7 @@ RSpec.describe Gergich::API do
 
   before :each do
     allow(HTTParty).to receive(:send).and_return(result)
-    allow(described_class).to receive(:base_options).and_return({})
+    allow(described_class).to receive(:prepare_options).and_return({})
   end
 
   it "provides helpful error when Change-Id not found" do

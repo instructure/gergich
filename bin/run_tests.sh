@@ -39,6 +39,10 @@ run_command bin/gergich citest
 run_command bin/master_bouncer check
 DRY_RUN=1 run_command bin/master_bouncer check_all
 
+# ensure gergich works without .git directories
+rm -rf .git
+run_command bin/gergich status
+
 run_command bin/check_coverage
 
 if [[ $GEMNASIUM_TOKEN && $GEMNASIUM_ENABLED ]]; then

@@ -2,6 +2,7 @@ require "sqlite3"
 require "json"
 require "fileutils"
 require "httparty"
+require "base64"
 
 GERGICH_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
@@ -10,6 +11,12 @@ GERGICH_GIT_PATH = ENV.fetch("GERGICH_GIT_PATH", ".")
 GergichError = Class.new(StandardError)
 
 module Gergich
+  def self.use_git?
+    Dir.chdir(GERGICH_GIT_PATH) do
+      system "git rev-parse --show-toplevel >/dev/null 2>&1"
+    end
+  end
+
   def self.git(args)
     Dir.chdir(GERGICH_GIT_PATH) do
       `git #{args} 2>/dev/null`
@@ -26,14 +33,30 @@ module Gergich
 
     def info
       @info ||= begin
-        output = Gergich.git("log -1 #{ref}")
-        /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
+        if Gergich.use_git?
+          output = Gergich.git("log -1 #{ref}")
+          /\Acommit (?<revision_id>[0-9a-f]+).*^\s*Change-Id: (?<change_id>\w+)/m =~ output
+        else
+          revision_id = ENV["GERRIT_PATCHSET_REVISION"] \
+            || raise(GergichError, "No .git directory, and GERRIT_PATCHSET_REVISION not set")
+          change_id = ENV["GERRIT_CHANGE_ID"] \
+            || raise(GergichError, "No .git directory, and GERRIT_CHANGE_ID not set")
+        end
         { revision_id: revision_id, change_id: change_id }
       end
     end
 
     def files
-      @files ||= Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
+      @files ||= begin
+        if Gergich.use_git?
+          Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
+        else
+          raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", { raw: true })
+          Base64.decode64(raw)
+            .scan(%r{^diff --git a/.*? b/(.*?)$})
+            .flatten
+        end
+      end
     end
 
     def revision_id
@@ -100,6 +123,8 @@ module Gergich
 
       puts "ChangeId: #{commit.change_id}"
       puts "Revision: #{commit.revision_id}"
+      puts "Files:"
+      puts "  #{commit.files.join("\n  ")}"
 
       puts
       review_info[:labels].each do |name, score|
@@ -174,27 +199,25 @@ module Gergich
 
   class API
     class << self
-      def get(url)
-        perform(:get, url)
+      def get(url, options = {})
+        perform(:get, url, options)
       end
 
-      def post(url, body)
-        perform(:post, url, body)
+      def post(url, body, options = {})
+        perform(:post, url, options.merge({ body: body }))
       end
 
-      def put(url, body)
-        perform(:put, url, body)
+      def put(url, body, options = {})
+        perform(:put, url, options.merge({ body: body }))
       end
 
       private
 
-      def perform(method, url, body = nil)
-        options = base_options
-        if body
-          options[:headers] = { "Content-Type" => "application/json" }
-          options[:body] = body
-        end
+      def perform(method, url, options)
+        options = prepare_options(options)
         ret = HTTParty.send(method, url, options).body
+        return ret if options[:raw]
+
         if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         elsif ret =~ /Not Found: (?<change_id>.*)/
@@ -216,14 +239,19 @@ module Gergich
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
-      def base_options
-        {
+      def prepare_options(options)
+        options = {
           base_uri: base_uri + "/a",
           digest_auth: {
             username: GERGICH_USER,
             password: ENV.fetch("GERGICH_KEY")
           }
-        }
+        }.merge(options)
+        if options[:body]
+          options[:headers] ||= {}
+          options[:headers]["Content-Type"] ||= "application/json"
+        end
+        options
       end
     end
   end

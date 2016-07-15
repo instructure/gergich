@@ -24,10 +24,10 @@ Lint/EndAlignment:
 Metrics/LineLength:
   Max: 100
 Metrics/MethodLength:
-  Max: 25
+  Max: 30
 Metrics/ClassLength:
   Max: 150
 Metrics/CyclomaticComplexity:
   Max: 10
 Metrics/AbcSize:
-  Max: 40
+  Max: 50

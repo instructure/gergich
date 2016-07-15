@@ -45,6 +45,12 @@ Additionally, Gergich needs to know where your Gerrit installation
 lives, so be sure to set `GERRIT_BASE_URL` (e.g.
 `https://gerrit.example.com`) or `GERRIT_HOST` (e.g. `gerrit.example.com`).
 
+Lastly, if you have no .git directory in CI land (say if you are building
+in docker and want to keep your images small), you also need to set
+`GERRIT_CHANGE_ID` and `GERRIT_PATCHSET_REVISION`. If you use Jenkins and
+the gerrit-trigger plugin, typcially all `GERRIT_*` vars will already be
+set, it's just a matter of plumbing them down to docker.
+
 ## Usage
 
 Run `gergich help` for detailed information about all supported commands.

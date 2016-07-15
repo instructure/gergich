@@ -2,7 +2,7 @@
 
 if ENV["COVERAGE"]
   require "simplecov"
-  SimpleCov.command_name "cli:#{ARGV.join(' ')}"
+  SimpleCov.command_name "cli:#{ARGV[0, 2].join(':')}:#{rand(1_000_000_000)}"
 end
 
 require_relative "../lib/gergich/cli/gergich"
