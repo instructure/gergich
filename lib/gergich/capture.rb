@@ -1,7 +1,14 @@
+require "English"
+
 module Gergich
   module Capture
     class BaseCapture
       def self.inherited(subclass)
+        name = normalize_captor_class_name(subclass)
+        Capture.captors[name] = subclass
+      end
+
+      def self.normalize_captor_class_name(subclass)
         name = subclass.name
         # borrowed from AS underscore, since we may not have it
         name.gsub!(/.*::|Capture\z/, "")
@@ -9,7 +16,6 @@ module Gergich
         name.gsub!(/([a-z\d])([A-Z])/, "\\1_\\2")
         name.tr!("-", "_")
         name.downcase!
-        Capture.captors[name] = subclass
       end
     end
 

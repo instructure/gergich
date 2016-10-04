@@ -205,6 +205,7 @@ do `gergich comment` calls so you don't have to wire it up yourself.
                   * eslint
                   * i18nliner
                   * flake8
+                  * stylelint
                   * custom:<path>:<class_name> - file path and ruby
                     class_name of a custom formatter.
 

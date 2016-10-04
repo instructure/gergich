@@ -1,5 +1,3 @@
-require_relative "../lib/gergich"
-
 RSpec.describe Gergich::API do
   let(:result) { double(:result, { body: "Not Found: 1234" }) }
 
