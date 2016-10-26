@@ -90,7 +90,7 @@ commands["check_all"] = {
     next if ENV["DRY_RUN"]
 
     changes.each do |change|
-      sha = change["current_revision"]
+      sha = change["current_revision"] || next
       revinfo = change["revisions"][sha]
       refspec = revinfo["ref"]
       number = revinfo["_number"]
