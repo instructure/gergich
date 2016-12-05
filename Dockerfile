@@ -11,7 +11,16 @@ RUN echo "deb http://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/ge
 
 ENV LANG C.UTF-8
 WORKDIR /app
-ADD . /app
 
-RUN bundle install --retry=3
-CMD bin/run_tests.sh
+COPY Gemfile gergich.gemspec Gemfile.lock /app/
+RUN chown -R docker:docker /app
+
+USER docker
+RUN bundle install --jobs 8
+USER root
+
+COPY . /app
+RUN mkdir -p /app/coverage && chown -R docker:docker /app
+
+USER docker
+CMD ["bin/run_tests.sh"]

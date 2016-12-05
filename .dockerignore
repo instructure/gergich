@@ -1,0 +1,4 @@
+/coverage
+/docker-compose.yml
+/Dockerfile
+/**/*.gem

@@ -22,8 +22,12 @@ module Gergich
 
         output.scan(pattern).map { |file, line, severity, error, context|
           context = "\n\n" + context.gsub(/^/, " ") if context
-          { path: file, message: "[rubocop] #{error}#{context}",
-            position: line.to_i, severity: SEVERITY_MAP[severity] }
+          {
+            path: file,
+            position: line.to_i,
+            message: "[rubocop] #{error}#{context}",
+            severity: SEVERITY_MAP[severity]
+          }
         }.compact
       end
     end

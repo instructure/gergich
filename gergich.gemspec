@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name                  = "gergich"
-  s.version               = "0.1.7"
+  s.version               = "0.1.8"
   s.summary               = "Command-line tool for adding Gerrit comments"
   s.description           = "Gergich is a little command-line tool for wiring up linters to " \
                             "Gerrit so you can get nice inline comments right on the review"
@@ -12,6 +12,12 @@ Gem::Specification.new do |s|
   s.license               = "MIT"
 
   s.required_ruby_version = ">= 1.9.3"
+
   s.add_dependency "sqlite3", "~> 1.3"
   s.add_dependency "httparty", "~> 0.6"
+
+  s.add_development_dependency "rake"
+  s.add_development_dependency "rspec", "~> 3.5"
+  s.add_development_dependency "rubocop"
+  s.add_development_dependency "simplecov"
 end

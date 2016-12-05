@@ -11,7 +11,7 @@ RSpec.shared_examples_for "a captor" do
   end
 
   it "catches errors" do
-    comments = subject.run(output)
-    expect(comments).to match_array(comments)
+    parsed_comments = subject.run(output)
+    expect(parsed_comments).to match_array(comments)
   end
 end

@@ -201,6 +201,7 @@ For common linting formats, `gergich capture` can be used to automatically
 do `gergich comment` calls so you don't have to wire it up yourself.
 
 <format>        - One of the following:
+                  * brakeman
                   * rubocop
                   * eslint
                   * i18nliner

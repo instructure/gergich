@@ -23,10 +23,10 @@ lib/gergich.rb:22:55: W: Line is too long. [55/54]
         path: "lib/gergich.rb",
         position: 22,
         message: <<-OUTPUT,
-        [rubocop] Line is too long. [55/54]
+[rubocop] Line is too long. [55/54]
 
-             def initialize(ref = "HEAD", revision_number = nil)
-                                                              ^^
+     def initialize(ref = "HEAD", revision_number = nil)
+                                                      ^^
         OUTPUT
         severity: "warn"
       }

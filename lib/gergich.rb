@@ -135,15 +135,15 @@ module Gergich
       puts "Cover Message:"
       puts review_info[:cover_message]
 
-      unless review_info[:comments].empty?
-        puts
-        puts "Inline Comments:"
-        puts
+      return if review_info[:comments].empty?
 
-        review_info[:comments].each do |file, comments|
-          comments.each do |comment|
-            puts "#{file}:#{comment[:line] || comment[:range]['start_line']}\n#{comment[:message]}"
-          end
+      puts
+      puts "Inline Comments:"
+      puts
+
+      review_info[:comments].each do |file, comments|
+        comments.each do |comment|
+          puts "#{file}:#{comment[:line] || comment[:range]['start_line']}\n#{comment[:message]}"
         end
       end
     end
@@ -362,10 +362,10 @@ module Gergich
     POSITION_KEYS = %w[end_character end_line start_character start_line].freeze
     def valid_position?(position)
       (
-        position.is_a?(Fixnum) && position >= 0
+        position.is_a?(Integer) && position >= 0
       ) || (
         position.is_a?(Hash) && position.keys.sort == POSITION_KEYS &&
-        position.values.all? { |v| v.is_a?(Fixnum) && v >= 0 }
+        position.values.all? { |v| v.is_a?(Integer) && v >= 0 }
       )
     end
 
@@ -407,7 +407,7 @@ module Gergich
     end
 
     def min_comment_score
-      all_comments.inject(0) { |a, e| [a, e.min_score].min }
+      all_comments.inject(0) { |acc, elem| [acc, elem.min_score].min }
     end
 
     def changed_files
@@ -441,7 +441,7 @@ module Gergich
       other_comments.each do |file|
         file.comments.each do |position, comments|
           comments.each do |comment|
-            line = position.is_a?(Fixnum) ? position : position["start_line"]
+            line = position.is_a?(Integer) ? position : position["start_line"]
             message << "\n\n#{file.path}:#{line}: #{comment}"
           end
         end
@@ -482,8 +482,8 @@ module Gergich
     def to_a
       comments.map do |position, position_comments|
         comment = position_comments.join("\n\n")
-        position_key = position.is_a?(Fixnum) ? :line : :range
-        position = JSON.parse(position) unless position.is_a?(Fixnum)
+        position_key = position.is_a?(Integer) ? :line : :range
+        position = JSON.parse(position) unless position.is_a?(Integer)
         {
           :message => comment,
           position_key => position

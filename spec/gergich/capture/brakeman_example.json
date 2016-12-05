@@ -1,0 +1,161 @@
+{
+  "scan_info": {
+    "app_path": "/usr/src/app",
+    "rails_version": "4.2.7.1",
+    "security_warnings": 7,
+    "start_time": "2016-12-02 17:05:56 -0700",
+    "end_time": "2016-12-02 17:07:35 -0700",
+    "duration": 98.614397,
+    "checks_performed": [
+      "BasicAuth",
+      "CrossSiteScripting",
+      "Execute",
+      "MassAssignment",
+      "ModelAttrAccessible",
+      "Redirect",
+      "SQL",
+      "SSLVerify"
+    ],
+    "number_of_controllers": 180,
+    "number_of_models": 402,
+    "number_of_templates": 446,
+    "ruby_version": "2.3.1",
+    "brakeman_version": "3.4.1"
+  },
+  "warnings": [
+    {
+      "warning_type": "Attribute Restriction",
+      "warning_code": 20,
+      "fingerprint": "00521a52082710dfc91c33c1559b63607dbfca535fcd1198ef3d47c6f09276a5",
+      "message": "attr_accessible is recommended over attr_protected",
+      "file": "app/models/custom_data.rb",
+      "line": 36,
+      "link": "http://brakemanscanner.org/docs/warning_types/attribute_restriction/",
+      "code": null,
+      "render_path": null,
+      "location": {
+        "type": "model",
+        "model": "CustomData"
+      },
+      "user_input": null,
+      "confidence": "Medium"
+    },
+    {
+      "warning_type": "Mass Assignment",
+      "warning_code": 60,
+      "fingerprint": "05dae814af162afd123abd1bf359ec303bc65c2cd9371c930c8f18683bd35dab",
+      "message": "Potentially dangerous attribute available for mass assignment",
+      "file": "app/models/submission_comment.rb",
+      "line": null,
+      "link": "http://brakemanscanner.org/docs/warning_types/mass_assignment/",
+      "code": ":context_id",
+      "render_path": null,
+      "location": {
+        "type": "model",
+        "model": "SubmissionComment"
+      },
+      "user_input": null,
+      "confidence": "Weak"
+    },
+    {
+      "warning_type": "Redirect",
+      "warning_code": 18,
+      "fingerprint": "0638af8f79c4d072fbc63ac21151223bbc40047246288c53bbab7500850f6943",
+      "message": "Possible unprotected redirect",
+      "file": "app/controllers/context_controller.rb",
+      "line": 60,
+      "link": "http://brakemanscanner.org/docs/warning_types/redirect/",
+      "code": "redirect_to(CanvasKaltura::ClientV3.new.assetSwfUrl(params[:id]))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "ContextController",
+        "method": "media_object_redirect"
+      },
+      "user_input": "params[:id]",
+      "confidence": "Weak"
+    },
+    {
+      "warning_type": "Cross Site Scripting",
+      "warning_code": 2,
+      "fingerprint": "135f48c967840b737fb7db054b82efc577bfd31d26c6ba357b4ff4da04465721",
+      "message": "Unescaped parameter value",
+      "file": "app/views/context/object_snippet.html.erb",
+      "line": 6,
+      "link": "http://brakemanscanner.org/docs/warning_types/cross_site_scripting",
+      "code": "Base64.decode64((params[:object_data] or \"\"))",
+      "render_path": [
+        {
+          "type": "controller",
+          "class": "ContextController",
+          "method": "object_snippet",
+          "line": 176,
+          "file": "app/controllers/context_controller.rb"
+        }
+      ],
+      "location": {
+        "type": "template",
+        "template": "context/object_snippet"
+      },
+      "user_input": "params[:object_data]",
+      "confidence": "Weak"
+    },
+    {
+      "warning_type": "SQL Injection",
+      "warning_code": 0,
+      "fingerprint": "4ad3902b6d012c8a9868226a30727a8834d666d2d04e933693e60d35762180f8",
+      "message": "Possible SQL injection",
+      "file": "app/models/account.rb",
+      "line": 795,
+      "link": "http://brakemanscanner.org/docs/warning_types/sql_injection/",
+      "code": "Account.find_by_sql(Account.sub_account_ids_recursive_sql(parent_account_id))",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "Account",
+        "method": "Account.sub_account_ids_recursive"
+      },
+      "user_input": "Account.sub_account_ids_recursive_sql(parent_account_id)",
+      "confidence": "High"
+    },
+    {
+      "warning_type": "SSL Verification Bypass",
+      "warning_code": 71,
+      "fingerprint": "522b4054b5c8a06808cace8c605b23633f5597a643ae3920998ccfda210fab32",
+      "message": "SSL certificate verification was bypassed",
+      "file": "lib/cc/importer/blti_converter.rb",
+      "line": 145,
+      "link": "http://brakemanscanner.org/docs/warning_types/ssl_verification_bypass/",
+      "code": "Net::HTTP.new(URI.parse(url).host, URI.parse(url).port).verify_mode = OpenSSL::SSL::VERIFY_NONE",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "CC::Importer::BLTIConverter",
+        "method": "fetch"
+      },
+      "user_input": null,
+      "confidence": "High"
+    },
+    {
+      "warning_type": "Command Injection",
+      "warning_code": 14,
+      "fingerprint": "816a81c5f19187c4a3855a2d49727ffd2f07c31284f44ba2621ae92b83576bdc",
+      "message": "Possible command injection",
+      "file": "lib/cc/importer/canvas/quiz_converter.rb",
+      "line": 44,
+      "link": "http://brakemanscanner.org/docs/warning_types/command_injection/",
+      "code": "`#{Qti.get_conversion_command(File.join(qti_folder, \"qti_2_1\"), qti_folder)}`",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "CC::Importer::Canvas::QuizConverter",
+        "method": "run_qti_converter"
+      },
+      "user_input": "Qti.get_conversion_command(File.join(qti_folder, \"qti_2_1\"), qti_folder)",
+      "confidence": "Medium"
+    }
+  ],
+  "ignored_warnings": [],
+  "errors": [],
+  "obsolete": []
+}
