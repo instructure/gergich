@@ -5,7 +5,7 @@ module Gergich
 
       def run(output)
         # e.g. "  4:21  error  Missing semicolon  semi"
-        error_pattern = /\s\s+(\d+):\d+\s+(\w+)\s+(.*?)\s+[\w-]+\n/
+        error_pattern = %r{\s\s+(\d+):\d+\s+(\w+)\s+(.*?)\s+[\w/-]+\n}
         pattern = %r{            # Example:
           ^([^\n]+)\n            #   jsapp/models/user.js
           ((#{error_pattern})+)  #     4:21  error  Missing semicolon  semi
