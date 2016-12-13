@@ -1,3 +1,4 @@
+require_relative "../gergich"
 require "English"
 
 module Gergich
@@ -20,21 +21,34 @@ module Gergich
     end
 
     class << self
-      def run(format, command)
+      def run(format, command, add_comments: true)
         captor = load_captor(format)
 
         exit_code, output = run_command(command)
         comments = captor.new.run(output.gsub(/\e\[\d+m/m, ""))
+        comments.each do |comment|
+          comment[:path] = relativize(comment[:path])
+        end
 
         draft = Gergich::Draft.new
         skip_paths = (ENV["SKIP_PATHS"] || "").split(",")
-        comments.each do |comment|
-          next if skip_paths.any? { |path| comment[:path].start_with?(path) }
-          draft.add_comment comment[:path], comment[:position],
-                            comment[:message], comment[:severity]
+        if add_comments
+          comments.each do |comment|
+            next if skip_paths.any? { |path| comment[:path].start_with?(path) }
+            draft.add_comment comment[:path], comment[:position],
+                              comment[:message], comment[:severity]
+          end
         end
 
-        exit_code
+        [exit_code, comments]
+      end
+
+      def base_path
+        @base_path ||= File.expand_path(GERGICH_GIT_PATH) + "/"
+      end
+
+      def relativize(path)
+        path.sub(base_path, "")
       end
 
       def run_command(command)

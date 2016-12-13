@@ -191,7 +191,8 @@ commands["capture"] = {
   summary: "Run a command and translate its output into `gergich comment` calls",
   action: ->(format, command) {
     require_relative "../../gergich/capture"
-    exit Gergich::Capture.run(format, command)
+    status, = Gergich::Capture.run(format, command)
+    exit status
   },
   help: ->() {
     <<-TEXT
