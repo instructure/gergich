@@ -29,7 +29,7 @@ OUTPUT
         "[eslint] Missing semicolon",
         "error"
       )
-      described_class.run("eslint", "-")
+      described_class.run("eslint", "-", suppress_output: true)
     end
 
     it "shouldn't eat stdin" do
@@ -53,7 +53,7 @@ OUTPUT
           "[eslint] Missing semicolon",
           "error"
         )
-        described_class.run("eslint", "-")
+        described_class.run("eslint", "-", suppress_output: true)
       end
     end
 
@@ -66,7 +66,7 @@ OUTPUT
           "[eslint] Missing semicolon",
           "error"
         )
-        described_class.run("eslint", "-")
+        described_class.run("eslint", "-", suppress_output: true)
       end
     end
   end

@@ -1,5 +1,5 @@
 RSpec.describe Gergich::API do
-  let(:result) { double(:result, { body: "Not Found: 1234" }) }
+  let(:result) { double(:result, body: "Not Found: 1234") }
 
   before :each do
     allow(HTTParty).to receive(:send).and_return(result)
@@ -13,14 +13,15 @@ end
 
 RSpec.describe Gergich::Draft do
   let!(:draft) do
-    commit = double(:commit, {
+    commit = double(
+      :commit,
       files: [
         "foo.rb",
         "bar/baz.lol"
       ],
       revision_id: "test",
       change_id: "test"
-    })
+    )
     described_class.new commit
   end
 
@@ -36,12 +37,12 @@ RSpec.describe Gergich::Draft do
 
       it "includes file comments" do
         draft.add_comment "foo.rb", 1, "fix foo", "info"
-        expect(subject).to eq({ "foo.rb" => [{ line: 1, message: "[INFO] fix foo" }] })
+        expect(subject).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
       end
 
       it "includes COMMIT_MSG comments" do
         draft.add_comment "/COMMIT_MSG", 1, "fix commit", "info"
-        expect(subject).to eq({ "/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }] })
+        expect(subject).to eq("/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }])
       end
 
       it "doesn't include orphaned file comments" do
@@ -89,10 +90,10 @@ RSpec.describe Gergich::Draft do
         draft.add_label "Code-Review", -2
         draft.add_label "Code-Review", 1
 
-        expect(subject).to eq({
+        expect(subject).to eq(
           "QA-Review" => -1,
           "Code-Review" => -2
-        })
+        )
       end
 
       it "disallows \"Verified\"" do

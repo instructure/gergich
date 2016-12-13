@@ -4,8 +4,8 @@ require "rubocop/rake_task"
 
 RSpec::Core::RakeTask.new
 
-task({ default: [:spec, :rubocop] })
-task({ test: :spec })
+task(default: [:spec, :rubocop])
+task(test: :spec)
 
 # rake rubocop
 RuboCop::RakeTask.new do |task|
@@ -13,4 +13,4 @@ RuboCop::RakeTask.new do |task|
 end
 
 # alias for rubocop task
-task({ cop: [:rubocop] })
+task(cop: [:rubocop])

@@ -21,10 +21,10 @@ module Gergich
     end
 
     class << self
-      def run(format, command, add_comments: true)
+      def run(format, command, add_comments: true, suppress_output: false)
         captor = load_captor(format)
 
-        exit_code, output = run_command(command)
+        exit_code, output = run_command(command, suppress_output: suppress_output)
         comments = captor.new.run(output.gsub(/\e\[\d+m/m, ""))
         comments.each do |comment|
           comment[:path] = relativize(comment[:path])
@@ -51,14 +51,14 @@ module Gergich
         path.sub(base_path, "")
       end
 
-      def run_command(command)
+      def run_command(command, suppress_output: false)
         exit_code = 0
 
         if command == "-"
-          output = wiretap($stdin)
+          output = wiretap($stdin, suppress_output)
         else
           IO.popen("#{command} 2>&1", "r+") do |io|
-            output = wiretap(io)
+            output = wiretap(io, suppress_output)
           end
           exit_code = $CHILD_STATUS.exitstatus
         end
@@ -66,10 +66,10 @@ module Gergich
         [exit_code, output]
       end
 
-      def wiretap(io)
+      def wiretap(io, suppress_output)
         output = ""
         io.each do |line|
-          $stdout.puts line
+          $stdout.puts line unless suppress_output
           output << line
         end
         output

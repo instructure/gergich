@@ -3,7 +3,7 @@ Documentation:
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 Style/BracesAroundHashParameters:
-  EnforcedStyle: braces
+  EnforcedStyle: context_dependent
 Style/IndentHash:
   Enabled: false
 Style/Lambda:

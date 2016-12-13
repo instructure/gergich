@@ -51,7 +51,7 @@ module Gergich
         if Gergich.use_git?
           Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
         else
-          raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", { raw: true })
+          raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
           Base64.decode64(raw)
             .scan(%r{^diff --git a/.*? b/(.*?)$})
             .flatten
@@ -204,11 +204,11 @@ module Gergich
       end
 
       def post(url, body, options = {})
-        perform(:post, url, options.merge({ body: body }))
+        perform(:post, url, options.merge(body: body))
       end
 
       def put(url, body, options = {})
-        perform(:put, url, options.merge({ body: body }))
+        perform(:put, url, options.merge(body: body))
       end
 
       private
