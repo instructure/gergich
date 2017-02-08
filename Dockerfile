@@ -12,7 +12,7 @@ RUN echo "deb http://apt.gemnasium.com stable main" > /etc/apt/sources.list.d/ge
 ENV LANG C.UTF-8
 WORKDIR /app
 
-COPY Gemfile gergich.gemspec Gemfile.lock /app/
+COPY Gemfile gergich.gemspec /app/
 RUN chown -R docker:docker /app
 
 USER docker

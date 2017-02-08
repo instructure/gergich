@@ -16,8 +16,8 @@ Gem::Specification.new do |s|
   s.add_dependency "sqlite3", "~> 1.3"
   s.add_dependency "httparty", "~> 0.6"
 
-  s.add_development_dependency "rake"
+  s.add_development_dependency "rake", "~> 12.0"
   s.add_development_dependency "rspec", "~> 3.5"
-  s.add_development_dependency "rubocop"
-  s.add_development_dependency "simplecov"
+  s.add_development_dependency "rubocop", "~> 0.47.1"
+  s.add_development_dependency "simplecov", "~> 0.13.0"
 end
