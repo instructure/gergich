@@ -14,21 +14,32 @@ module Gergich
         #   bin/gergich:47:8: C: Prefer double-quoted strings
         #   if ENV['DEBUG']
         #          ^^^^^^^
-        pattern = /
-          ^([^:\n]+):(\d+):\d+:\s(\w):\s(.*?)\n
-          ([^\n]+\n
-           [^^\n]*\^+[^^\n]*\n)?
-        /mx
+        first_line_pattern = /^([^:\n]+):(\d+):\d+:\s(\w):\s/
 
-        output.scan(pattern).map { |file, line, severity, error, context|
-          context = "\n\n" + context.gsub(/^/, " ") if context
-          {
+        parts = output.split(first_line_pattern)
+        parts.shift
+        messages = []
+
+        until parts.empty?
+          file = parts.shift
+          line = parts.shift
+          severity = parts.shift
+          message = parts.shift
+          # if there is code context at the end, separate it and indent it
+          # so that gerrit preserves formatting
+          if /(?<context>[^\n]+\n *\^+\n)/m =~ message
+            message.sub!(context, "\n" + context.gsub(/^/, " "))
+          end
+
+          messages << {
             path: file,
             position: line.to_i,
-            message: "[rubocop] #{error}#{context}",
+            message: "[rubocop] #{message}",
             severity: SEVERITY_MAP[severity]
           }
-        }.compact
+        end
+
+        messages
       end
     end
   end
