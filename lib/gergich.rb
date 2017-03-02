@@ -220,7 +220,7 @@ module Gergich
 
         if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
-        elsif ret =~ /Not Found: (?<change_id>.*)/
+        elsif ret =~ /Not found: (?<change_id>.*)/i
           raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]}.\n"\
                 "This is most likely due to this"\
                 " Change-Id already being used"\
