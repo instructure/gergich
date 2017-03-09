@@ -26,7 +26,7 @@ module Gergich
   class Commit
     attr_reader :ref
 
-    def initialize(ref = "HEAD", revision_number = nil)
+    def initialize(ref = ENV.fetch("GERRIT_PATCHSET_REVISION", "HEAD"), revision_number = nil)
       @ref = ref
       @revision_number = revision_number
     end
