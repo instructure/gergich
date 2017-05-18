@@ -7,9 +7,9 @@ MASTER_BOUNCER_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 require_relative "../../gergich"
 
 PROJECT = ENV["GERRIT_PROJECT"] || error("no GERRIT_PROJECT set")
-# TODO: configurable thresholds per-project, also time-based thresholds
-WARN_DISTANCE = 100
-ERROR_DISTANCE = 200
+# TODO: time-based thresholds
+WARN_DISTANCE = ENV.fetch("MASTER_BOUNCER_WARN_DISTANCE", 50).to_i
+ERROR_DISTANCE = ENV.fetch("MASTER_BOUNCER_ERROR_DISTANCE", 100).to_i
 
 def potentially_mergeable_changes
   url = "/changes/?q=status:open+" \
