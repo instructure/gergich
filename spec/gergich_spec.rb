@@ -1,13 +1,52 @@
 RSpec.describe Gergich::API do
-  let(:result) { double(:result, body: "Not Found: 1234") }
+  context "bad change-id" do
+    let(:result) { double(:result, body: "Not Found: 1234") }
 
-  before :each do
-    allow(HTTParty).to receive(:send).and_return(result)
-    allow(described_class).to receive(:prepare_options).and_return({})
+    before :each do
+      allow(HTTParty).to receive(:send).and_return(result)
+      allow(described_class).to receive(:prepare_options).and_return({})
+    end
+
+    it "provides helpful error when Change-Id not found" do
+      expect { described_class.get("/a/changes/1234") }
+        .to raise_error(/Cannot find Change-Id: 1234/)
+    end
   end
 
-  it "provides helpful error when Change-Id not found" do
-    expect { described_class.get("/a/changes/1234") }.to raise_error(/Cannot find Change-Id: 1234/)
+  context "GERGICH_DIGEST_AUTH exists" do
+    it "uses digest auth" do
+      original_basic_auth = ENV["GERGICH_DIGEST_AUTH"]
+      ENV["GERGICH_DIGEST_AUTH"] = "1"
+      original_gergich_key = ENV["GERGICH_KEY"]
+      ENV["GERGICH_KEY"] = "foo"
+      allow(described_class).to receive(:base_uri).and_return("https://gerrit.foobar.com")
+
+      expect(described_class.send(:prepare_options, {}))
+        .to match(
+          hash_including(
+            digest_auth: { username: "gergich", password: ENV["GERGICH_KEY"] }
+          )
+        )
+
+      ENV["GERGICH_DIGEST_AUTH"] = original_basic_auth
+      ENV["GERGICH_KEY"] = original_gergich_key
+    end
+  end
+
+  context "GERGICH_DIGEST_AUTH does not exist" do
+    it "uses basic auth" do
+      original_basic_auth = ENV["GERGICH_DIGEST_AUTH"]
+      ENV["GERGICH_DIGEST_AUTH"] = nil
+      original_gergich_key = ENV["GERGICH_KEY"]
+      ENV["GERGICH_KEY"] = "foo"
+      allow(described_class).to receive(:base_uri).and_return("https://gerrit.foobar.com")
+
+      expect(described_class.send(:prepare_options, {}))
+        .to match(hash_including(basic_auth: { username: "gergich", password: ENV["GERGICH_KEY"] }))
+
+      ENV["GERGICH_DIGEST_AUTH"] = original_basic_auth
+      ENV["GERGICH_KEY"] = original_gergich_key
+    end
   end
 end
 

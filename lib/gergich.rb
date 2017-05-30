@@ -239,14 +239,28 @@ module Gergich
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
+      def auth_config
+        if ENV["GERGICH_DIGEST_AUTH"]
+          {
+            digest_auth: {
+              username: GERGICH_USER,
+              password: ENV.fetch("GERGICH_KEY")
+            }
+          }
+        else
+          {
+            basic_auth: {
+              username: GERGICH_USER,
+              password: ENV.fetch("GERGICH_KEY")
+            }
+          }
+        end
+      end
+
       def prepare_options(options)
         options = {
-          base_uri: base_uri + "/a",
-          digest_auth: {
-            username: GERGICH_USER,
-            password: ENV.fetch("GERGICH_KEY")
-          }
-        }.merge(options)
+          base_uri: base_uri + "/a"
+        }.merge(auth_config).merge(options)
         if options[:body]
           options[:headers] ||= {}
           options[:headers]["Content-Type"] ||= "application/json"
