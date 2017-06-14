@@ -8,6 +8,8 @@ RSpec.describe Gergich::API do
     end
 
     it "provides helpful error when Change-Id not found" do
+      # Get ride of CI_TEST_RUN environment variable so the api preforms normally
+      ENV["CI_TEST_RUN"] = nil
       expect { described_class.get("/a/changes/1234") }
         .to raise_error(/Cannot find Change-Id: 1234/)
     end
@@ -90,23 +92,29 @@ RSpec.describe Gergich::Draft do
       end
     end
 
-    describe "[:cover_message]" do
-      subject { super()[:cover_message] }
-
-      it "includes the Code-Review score if negative" do
-        draft.add_label "Code-Review", -1
-        expect(subject).to match(/^-1/)
-      end
-
-      it "doesn't include the score if not negative" do
-        draft.add_label "Code-Review", 0
-        expect(subject).to_not match(/^0/)
-      end
+    describe "[:cover_message_parts]" do
+      subject { super()[:cover_message_parts] }
+      let(:message_1) { "this is good" }
+      let(:message_2) { "loljk it's terrible" }
 
       it "includes explicitly added messages" do
-        draft.add_message "this is good"
-        draft.add_message "loljk it's terrible"
-        expect(subject).to include("this is good\n\nloljk it's terrible")
+        draft.add_message message_1
+        draft.add_message message_2
+
+        expect(subject).to include(message_1)
+        expect(subject).to include(message_2)
+      end
+
+      context "orphaned file comments exist" do
+        let(:orphaned_comment) { "fix invalid" }
+
+        before :each do
+          draft.add_comment "invalid.rb", 1, orphaned_comment, "info"
+        end
+
+        it "includes orphan file message" do
+          expect(subject.first).to match(/#{orphaned_comment}/)
+        end
       end
     end
 
@@ -178,6 +186,136 @@ RSpec.describe Gergich::Draft do
 
           expect(subject).to eq(-1)
         end
+      end
+    end
+  end
+end
+
+RSpec.describe Gergich::Review do
+  let!(:commit) do
+    double(
+      :commit,
+      files: [
+        "foo.rb",
+        "bar/baz.lol"
+      ],
+      revision_id: "test",
+      revision_number: 1,
+      change_id: "test"
+    )
+  end
+  let!(:draft) do
+    Gergich::Draft.new commit
+  end
+  let!(:review) { described_class.new(commit, draft) }
+
+  after do
+    draft.reset!
+  end
+
+  describe "#publish!" do
+    context "nothing to publish" do
+      before :each do
+        allow(review).to receive(:anything_to_publish?).and_return(false)
+      end
+
+      it "does nothing" do
+        expect(Gergich::API).not_to receive(:post)
+
+        review.publish!
+      end
+    end
+
+    context "something to publish" do
+      before :each do
+        allow(review).to receive(:anything_to_publish?).and_return(true)
+        allow(review).to receive(:already_commented?).and_return(false)
+        allow(review).to receive(:generate_payload).and_return({})
+      end
+
+      it "publishes via the api" do
+        expect(Gergich::API).to receive(:post)
+        allow(review).to receive(:change_name?).and_return(false)
+        review.publish!
+      end
+    end
+  end
+
+  describe "#anything_to_publish?" do
+    before :each do
+      allow(review).to receive(:current_label).and_return("BAHA")
+      allow(review).to receive(:current_label_revision).and_return("Revision trash stuff")
+    end
+
+    context "no comments exist" do
+      it "returns false" do
+        allow(review).to receive(:new_score?).and_return(false)
+        expect(review.anything_to_publish?).to eq false
+      end
+    end
+
+    context "comments exist" do
+      it "returns true" do
+        draft.info[:comments] = "Hello there this is a comment"
+        expect(review.anything_to_publish?).to eq true
+      end
+    end
+  end
+
+  describe "#new_score?" do
+    before :each do
+      allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
+      allow(review).to receive(:current_score).and_return(0)
+    end
+
+    context "score is the same" do
+      it "returns false" do
+        draft.info[:score] = 0
+        expect(review.new_score?).to eq false
+      end
+    end
+
+    context "score is different" do
+      it "returns true" do
+        draft.info[:score] = -1
+        expect(review.new_score?).to eq true
+      end
+    end
+  end
+
+  describe "#upcoming_score" do
+    context "current_label_is_for_current_revision? is true" do
+      it "Should return the min value of draft.info[:score] and current_score" do
+        allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
+        allow(review).to receive(:current_score).and_return(0)
+        review.draft.info[:score] = 1
+        expect(review.upcoming_score).to eq 0
+      end
+    end
+
+    context "current_label_is_for_current_revision? is false" do
+      it "Should return the value of draft.info[:score]" do
+        allow(review).to receive(:current_label_is_for_current_revision?).and_return(false)
+        review.draft.info[:score] = 1
+        expect(review.upcoming_score).to eq 1
+      end
+    end
+  end
+
+  describe "#cover_message" do
+    context "score is negative" do
+      it "includes the Code-Review score if negative" do
+        allow(review).to receive(:upcoming_score).and_return(-1)
+        review.draft.add_label "Code-Review", -1
+        expect(review.cover_message).to match(/^-1/)
+      end
+    end
+
+    context "score is non-negative" do
+      it "doesn't include the score if not negative" do
+        allow(review).to receive(:upcoming_score).and_return(0)
+        draft.add_label "Code-Review", 0
+        expect(subject).to_not match(/^0/)
       end
     end
   end

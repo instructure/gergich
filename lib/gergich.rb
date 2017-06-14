@@ -67,6 +67,7 @@ module Gergich
       @revision_number ||= begin
         gerrit_info = API.get("/changes/?q=#{change_id}&o=ALL_REVISIONS")[0]
         raise GergichError, "Gerrit patchset not found" unless gerrit_info
+
         gerrit_info["revisions"][revision_id]["_number"]
       end
     end
@@ -87,10 +88,8 @@ module Gergich
     # Public: publish all draft comments/labels/messages
     def publish!(allow_repost = false)
       # only publish if we have something to say or if our last score was negative
-      return unless anything_to_publish? || previous_score_negative?
+      return unless anything_to_publish?
 
-      # TODO: rather than just bailing, fetch the comments and only post
-      # ones that don't exist (if any)
       return if already_commented? && !allow_repost
 
       API.post(generate_url, generate_payload)
@@ -109,8 +108,24 @@ module Gergich
 
     def anything_to_publish?
       !review_info[:comments].empty? ||
-        !review_info[:cover_message].empty? ||
-        review_info[:labels].any? { |_, score| score != 0 }
+        !review_info[:cover_message_parts].empty? ||
+        new_score?
+    end
+
+    def new_score?
+      if current_label_is_for_current_revision?
+        review_info[:score] < current_score.to_i
+      else
+        true
+      end
+    end
+
+    def upcoming_score
+      if current_label_is_for_current_revision?
+        [current_score.to_i, review_info[:score]].min
+      else
+        review_info[:score]
+      end
     end
 
     # Public: show the current draft for this patchset
@@ -133,7 +148,7 @@ module Gergich
 
       puts
       puts "Cover Message:"
-      puts review_info[:cover_message]
+      puts cover_message
 
       return if review_info[:comments].empty?
 
@@ -148,29 +163,87 @@ module Gergich
       end
     end
 
-    def previous_score
-      last_message = my_messages
-        .sort_by { |message| message["date"] }
-        .last
-
-      text = last_message && last_message["message"] || ""
-      text =~ /^-[12]/
-
-      ($& || "").to_i
+    def multi_build_setup?
+      # convert to boolean if this variable exists or not
+      !ENV["GERGICH_COMMENT_PREFIX"].nil?
     end
 
-    def previous_score_negative?
-      previous_score < 0
+    def unique_comment_prefix
+      ENV["GERGICH_COMMENT_PREFIX"]
     end
 
     def already_commented?
+      if multi_build_setup?
+        my_messages_on_current_revision.any? do |message|
+          message["message"] =~ /^#{unique_comment_prefix}/
+        end
+      else
+        my_messages_on_current_revision.any?
+      end
+    end
+
+    def my_messages_on_current_revision
       revision_number = commit.revision_number
-      my_messages.any? { |message| message["_revision_number"] == revision_number }
+      my_messages.select { |message| message["_revision_number"] == revision_number }
     end
 
     def my_messages
       @messages ||= API.get("/changes/#{commit.change_id}/detail")["messages"]
         .select { |message| message["author"] && message["author"]["username"] == GERGICH_USER }
+    end
+
+    # currently, cover message only supports the GERGICH_REVIEW_LABEL.
+    # i.e., even if gergich has "Code-Review: -2"
+    def current_label
+      @current_label ||= begin
+        API.get("/changes/#{commit.change_id}/detail")["labels"]
+          .fetch(GERGICH_REVIEW_LABEL, {})
+          .fetch("all", [])
+          .select { |label| label["username"] == GERGICH_USER }
+          .first
+      end
+    end
+
+    def current_label_date
+      @current_label_date ||= current_label && current_label["date"]
+    end
+
+    # unfortunately, the revision is not a field in the label json.
+    # however, we can match the label timestamp w/ one of our comment timestamps,
+    # then grab the comment's revision.
+    def current_label_revision
+      @current_label_revision ||= begin
+        date = current_label_date
+        comment_for_current_label = my_messages.find { |message| message["date"] == date } ||
+                                    my_messages.last
+        comment_for_current_label["_revision_number"]
+      end
+    end
+
+    def current_label_is_for_current_revision?
+      current_label_revision == commit.revision_number
+    end
+
+    def current_score
+      current_label && current_label["value"] || 0
+    end
+
+    def cover_message
+      parts = review_info[:cover_message_parts]
+      prefix = cover_message_prefix
+      parts.unshift prefix if prefix != ""
+      parts.join("\n\n")
+    end
+
+    def cover_message_prefix
+      score = upcoming_score
+      prefix_parts = []
+      prefix_parts << unique_comment_prefix if multi_build_setup?
+      prefix_parts << score if score < 0
+      prefix_parts.join(":")
+      # [].join(":") => ""
+      # [-2].join(":") => "-2"
+      # ["some build prefix", -2].join(":") => "some build prefix:-2"
     end
 
     def whats_his_face
@@ -187,7 +260,7 @@ module Gergich
 
     def generate_payload
       {
-        message: review_info[:cover_message],
+        message: cover_message,
         labels: review_info[:labels],
         comments: review_info[:comments],
         # we don't want the post to fail if another
@@ -434,7 +507,7 @@ module Gergich
 
         {
           comments: comments,
-          cover_message: cover_message,
+          cover_message_parts: cover_message_parts,
           total_comments: all_comments.map(&:count).inject(&:+),
           score: labels[GERGICH_REVIEW_LABEL],
           labels: labels
@@ -464,13 +537,10 @@ module Gergich
       message
     end
 
-    def cover_message
-      score = labels[GERGICH_REVIEW_LABEL]
+    def cover_message_parts
       parts = messages
-      parts.unshift score.to_s if score < 0
-
       parts << orphaned_message unless other_comments.empty?
-      parts.join("\n\n")
+      parts
     end
   end
 

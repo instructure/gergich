@@ -35,17 +35,21 @@ run_command bundle exec rubocop
 export COVERAGE=1
 
 run_command bundle exec rspec
-run_command bin/gergich citest
-run_command bin/master_bouncer check
-DRY_RUN=1 run_command bin/master_bouncer check_all
 
-# ensure gergich works without .git directories
-rm -rf .git
-run_command bin/gergich status
+# these actually hit gerrit; only run them in CI land (you can do it
+# locally if you set all the docker-compose env vars)
+if [[ "$GERRIT_PATCHSET_REVISION" ]]; then
+  run_command bin/gergich citest
+  run_command bin/master_bouncer check
+  DRY_RUN=1 run_command bin/master_bouncer check_all
+  # ensure gergich works without .git directories
+  rm -rf .git
+  run_command bin/gergich status
+fi
 
 run_command bin/check_coverage
 
-if [[ $GEMNASIUM_TOKEN && $GEMNASIUM_ENABLED ]]; then
+if [[ "$GEMNASIUM_TOKEN" && "$GEMNASIUM_ENABLED" ]]; then
   # Push our dependency specification files to gemnasium for analysis
   run_command gemnasium dependency_files push -f=gergich.gemspec
 fi

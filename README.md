@@ -22,12 +22,14 @@ Gergich publishes the review to Gerrit.
 ## Limitations
 
 Because everything is synchronized/stored in a local sqlite db, you
-should only call Gergich from a single box/build per patchset. Gergich
-does a check when publishing to ensure he hasn't already posted on this
-patchset before; if he has, publish will be a no-op. This protects
-against reposts (say, on a retrigger), but it does mean that you shouldn't
-have completely different builds posting Gergich comments on the same
-revision, unless you set up different credentials for each.
+should only call Gergich from a single box/build per patchset unless you
+have a unique `GERGICH_COMMENT_PREFIX` set for each box/build per patchset.
+Gergich does a check when publishing to ensure he hasn't already posted on
+this patchset before (w/ the same `GERGICH_COMMENT_PREFIX`); if he has,
+publish will be a no-op. This protects against reposts (say, on a retrigger),
+but it does mean that you shouldn't have completely different builds posting
+Gergich comments on the same revision, unless you set up different
+credentials for each.
 
 ## Installation
 

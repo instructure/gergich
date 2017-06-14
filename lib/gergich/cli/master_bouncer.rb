@@ -42,15 +42,15 @@ def maybe_bounce_commit!(commit)
   end
 
   review = Gergich::Review.new(commit, draft)
-  previous_score = review.previous_score
+  current_score = review.current_score
 
-  puts "#{detail}, " + (score == previous_score ?
+  puts "#{detail}, " + (score == current_score ?
                         "score still #{score}" :
-                        "changing score from #{previous_score} to #{score}")
+                        "changing score from #{current_score} to #{score}")
 
   # since we run on a daily cron, we might be checking the same patchset
   # many times, so bail if nothing has changed
-  return if score == previous_score
+  return if score == current_score
 
   draft.add_label MASTER_BOUNCER_REVIEW_LABEL, score
   draft.add_message message if message
