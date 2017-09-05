@@ -42,7 +42,10 @@ module Gergich
           change_id = ENV["GERRIT_CHANGE_ID"] \
             || raise(GergichError, "No .git directory, and GERRIT_CHANGE_ID not set")
         end
-        { revision_id: revision_id, change_id: change_id }
+        project = ENV["GERRIT_PROJECT"]
+        branch = ENV["GERRIT_BRANCH"]
+
+        { revision_id: revision_id, change_id: change_id, project: project, branch: branch }
       end
     end
 
@@ -65,6 +68,9 @@ module Gergich
 
     def revision_number
       @revision_number ||= begin
+        patchset_number = ENV["GERRIT_PATCHSET_NUMBER"]
+        return patchset_number unless patchset_number.nil?
+
         gerrit_info = API.get("/changes/?q=#{change_id}&o=ALL_REVISIONS")[0]
         raise GergichError, "Gerrit patchset not found" unless gerrit_info
 
@@ -73,7 +79,11 @@ module Gergich
     end
 
     def change_id
-      info[:change_id]
+      if info[:project] && info[:branch]
+        "#{info[:project]}~#{info[:branch]}~#{info[:change_id]}"
+      else
+        info[:change_id]
+      end
     end
   end
 
@@ -221,6 +231,7 @@ module Gergich
     end
 
     def current_label_is_for_current_revision?
+      return false unless current_label
       current_label_revision == commit.revision_number
     end
 
