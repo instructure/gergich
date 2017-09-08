@@ -222,6 +222,7 @@ module Gergich
     # however, we can match the label timestamp w/ one of our comment timestamps,
     # then grab the comment's revision.
     def current_label_revision
+      return nil if my_messages.empty?
       @current_label_revision ||= begin
         date = current_label_date
         comment_for_current_label = my_messages.find { |message| message["date"] == date } ||
@@ -231,7 +232,6 @@ module Gergich
     end
 
     def current_label_is_for_current_revision?
-      return false unless current_label
       current_label_revision == commit.revision_number
     end
 
