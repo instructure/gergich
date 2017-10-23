@@ -107,6 +107,7 @@ do `gergich comment` calls so you don't have to wire it up yourself.
 * `i18nliner`
 * `flake8`
 * `stylelint`
+* `shellcheck` - shellcheck json output
 * `custom:<path>:<class_name>` - file path and ruby class_name of a custom
   formatter.
 
@@ -139,6 +140,8 @@ gergich capture rubocop "bundle exec rubocop"
 gergich capture eslint eslint
 
 gergich capture i18nliner "rake i18nliner:check"
+
+gergich capture shellcheck "shellcheck --format json build.sh"
 
 gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
 
