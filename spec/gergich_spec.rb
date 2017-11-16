@@ -52,6 +52,24 @@ RSpec.describe Gergich::API do
   end
 end
 
+RSpec.describe Gergich::Commit do
+  before :each do
+    allow(Gergich).to receive(:use_git?).and_return(false)
+  end
+
+  context "change_id works" do
+    it "supports branches with slashes" do
+      allow(ENV).to receive(:[]).with("GERRIT_PATCHSET_REVISION").and_return("commit-ish")
+      allow(ENV).to receive(:[]).with("GERRIT_PROJECT").and_return("spec-project")
+      allow(ENV).to receive(:[]).with("GERRIT_BRANCH").and_return("releases/2017.11.17")
+      allow(ENV).to receive(:[]).with("GERRIT_CHANGE_ID").and_return("dummychangeset")
+
+      expect(described_class.new.change_id) # %2F = / and %7E = ~
+        .to match("spec-project%7Ereleases%2F2017.11.17%7Edummychangeset")
+    end
+  end
+end
+
 RSpec.describe Gergich::Draft do
   let!(:draft) do
     commit = double(

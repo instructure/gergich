@@ -1,3 +1,4 @@
+require "erb"
 require "sqlite3"
 require "json"
 require "fileutils"
@@ -80,7 +81,7 @@ module Gergich
 
     def change_id
       if info[:project] && info[:branch]
-        "#{info[:project]}~#{info[:branch]}~#{info[:change_id]}"
+        ERB::Util.url_encode "#{info[:project]}~#{info[:branch]}~#{info[:change_id]}"
       else
         info[:change_id]
       end
