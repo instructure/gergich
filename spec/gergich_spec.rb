@@ -65,7 +65,7 @@ RSpec.describe Gergich::Commit do
       allow(ENV).to receive(:[]).with("GERRIT_CHANGE_ID").and_return("dummychangeset")
 
       expect(described_class.new.change_id) # %2F = / and %7E = ~
-        .to match("spec-project%7Ereleases%2F2017.11.17%7Edummychangeset")
+        .to match("spec-project~releases%2F2017.11.17~dummychangeset")
     end
   end
 end

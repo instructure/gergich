@@ -81,7 +81,7 @@ module Gergich
 
     def change_id
       if info[:project] && info[:branch]
-        ERB::Util.url_encode "#{info[:project]}~#{info[:branch]}~#{info[:change_id]}"
+        "#{info[:project]}~#{ERB::Util.url_encode info[:branch]}~#{info[:change_id]}"
       else
         info[:change_id]
       end
@@ -147,8 +147,11 @@ module Gergich
         return
       end
 
+      info = commit.info
+      puts "Project: #{info[:project]}"
+      puts "Branch: #{info[:branch]}"
+      puts "Revision: #{info[:revision_id]} (##{commit.revision_number})"
       puts "ChangeId: #{commit.change_id}"
-      puts "Revision: #{commit.revision_id}"
       puts "Files:"
       puts "  #{commit.files.join("\n  ")}"
 
@@ -306,7 +309,7 @@ module Gergich
         if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         elsif ret =~ /Not found: (?<change_id>.*)/i
-          raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]}.\n"\
+          raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]} at #{url}.\n"\
                 "This is most likely due to this"\
                 " Change-Id already being used"\
                 " by an ABANDONED change.\n"\
