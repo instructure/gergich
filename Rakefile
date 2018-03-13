@@ -4,7 +4,7 @@ require "rubocop/rake_task"
 
 RSpec::Core::RakeTask.new
 
-task(default: [:spec, :rubocop])
+task(default: %i[spec rubocop])
 task(test: :spec)
 
 # rake rubocop

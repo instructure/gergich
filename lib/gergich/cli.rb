@@ -73,7 +73,7 @@ def run_app(commands)
       run_command(action)
     rescue GergichError
       error $ERROR_INFO.message
-    rescue
+    rescue StandardError
       error "Unhandled exception: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
     end
   else

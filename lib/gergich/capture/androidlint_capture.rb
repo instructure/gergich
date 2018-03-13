@@ -23,6 +23,8 @@ module Gergich
         # /path/to/values.xml:5: Warning: For language "fr" (French) the following quantities are not relevant: few, zero [UnusedQuantity]
         #    <plurals name="number">
         #    ^
+        #
+        # rubocop:enable Metrics/LineLength
         pattern = /
           ^([^:\n]+):(\d+)?:?\s(\w+):\s(.*?)\n
           ([^\n]+\n

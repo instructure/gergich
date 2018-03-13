@@ -106,9 +106,7 @@ module Gergich
       API.post(generate_url, generate_payload)
 
       # because why not
-      if change_name?
-        API.put("/accounts/self/name", { name: whats_his_face }.to_json)
-      end
+      API.put("/accounts/self/name", { name: whats_his_face }.to_json) if change_name?
 
       review_info
     end
@@ -202,7 +200,7 @@ module Gergich
     end
 
     def my_messages
-      @messages ||= API.get("/changes/#{commit.change_id}/detail")["messages"]
+      @my_messages ||= API.get("/changes/#{commit.change_id}/detail")["messages"]
         .select { |message| message["author"] && message["author"]["username"] == GERGICH_USER }
     end
 
@@ -321,7 +319,7 @@ module Gergich
       end
 
       def base_uri
-        @base_url ||= \
+        @base_uri ||= \
           ENV["GERRIT_BASE_URL"] ||
           ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}" ||
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
@@ -478,7 +476,7 @@ module Gergich
           labels[row["name"]] = row["score"]
         end
         score = min_comment_score
-        labels[GERGICH_REVIEW_LABEL] = score if score < 0 && score < labels[GERGICH_REVIEW_LABEL]
+        labels[GERGICH_REVIEW_LABEL] = score if score < [0, labels[GERGICH_REVIEW_LABEL]].min
         labels
       end
     end

@@ -19,7 +19,7 @@ def potentially_mergeable_changes
                     "branch:master" \
                  "&o=CURRENT_REVISION"
   changes = Gergich::API.get(url)
-  changes.select { |c| c["subject"] !~ /\Awip($|\W)/i }
+  changes.reject { |c| c["subject"] =~ /\Awip($|\W)/i }
 end
 
 def maybe_bounce_commit!(commit)
@@ -67,10 +67,10 @@ commands = {}
 
 commands["check"] = {
   summary: "Check the current commit's age",
-  action: ->() {
+  action: -> {
     maybe_bounce_commit! Gergich::Commit.new
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 master_bouncer check
 
@@ -82,7 +82,7 @@ TEXT
 
 commands["check_all"] = {
   summary: "Check the age of all potentially mergeable changes",
-  action: ->() {
+  action: -> {
     Gergich.git("fetch")
     gerrit_host = ENV["GERRIT_HOST"] || error("No GERRIT_HOST set")
 
@@ -102,7 +102,7 @@ commands["check_all"] = {
       sleep 1
     end
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 master_bouncer check_all
 

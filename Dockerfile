@@ -1,4 +1,4 @@
-FROM instructure/ruby:2.1
+FROM instructure/ruby:2.2
 
 # Add Gemnasium toolbelt
 USER root

@@ -1,11 +1,12 @@
+AllCops:
+  TargetRubyVersion: 2.2.0
+
 Documentation:
   Enabled: false
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
-Style/IndentHash:
-  Enabled: false
 Style/Lambda:
   Enabled: false
 Style/MultilineTernaryOperator:
@@ -17,10 +18,17 @@ Style/PercentLiteralDelimiters:
     '%W': '[]'
 Style/StringLiterals:
   EnforcedStyle: double_quotes
-Style/MultilineMethodCallIndentation:
+Style/StderrPuts:
+  Enabled: false
+Layout/IndentHash:
+  Enabled: false
+Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
-Lint/EndAlignment:
+Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
+# re-enable this when our min ruby is 2.3
+Layout/IndentHeredoc:
+  Enabled: false
 Metrics/LineLength:
   Max: 100
 Metrics/MethodLength:

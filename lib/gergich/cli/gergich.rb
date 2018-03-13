@@ -1,5 +1,3 @@
-# encoding=utf-8
-
 require_relative "../cli"
 require_relative "../../gergich"
 
@@ -27,7 +25,7 @@ def run_ci_test!(all_commands)
   commands_to_test << "status" # put it at the end, so we maximize the stuff it tests
 
   commands = commands_to_test.map { |command| [command, CI_TEST_ARGS[command] || []] }
-  commands.concat all_commands.map { |command| ["help", [command]] }
+  commands.concat(all_commands.map { |command| ["help", [command]] })
 
   # after running our test commands, reset and publish frd:
   commands << ["reset"]
@@ -50,7 +48,7 @@ commands = {}
 
 commands["reset"] = {
   summary: "Clear out pending comments/labels/messages for this patchset",
-  action: ->() {
+  action: -> {
     Gergich::Draft.new.reset!
   },
   help: -> {
@@ -64,7 +62,7 @@ TEXT
 
 commands["publish"] = {
   summary: "Publish the draft for this patchset",
-  action: ->() {
+  action: -> {
     if (data = Gergich::Review.new.publish!)
       puts "Published #{data[:total_comments]} comments, set score to #{data[:score]}"
     else
@@ -87,7 +85,7 @@ TEXT
 
 commands["status"] = {
   summary: "Show the current draft for this patchset",
-  action: ->() {
+  action: -> {
     Gergich::Review.new.status
   },
   help: -> {
@@ -120,7 +118,7 @@ commands["comment"] = {
                         comment["severity"]
     end
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 gergich comment <comment_data>
 
@@ -159,7 +157,7 @@ commands["message"] = {
     draft = Gergich::Draft.new
     draft.add_message message
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 gergich message <message>
 
@@ -174,7 +172,7 @@ commands["label"] = {
   action: ->(label, score) {
     Gergich::Draft.new.add_label label, score
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 gergich label <label> <score>
 
@@ -194,7 +192,7 @@ commands["capture"] = {
     status, = Gergich::Capture.run(format, command)
     exit status
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 gergich capture <format> <command>
 
@@ -234,11 +232,11 @@ TEXT
 
 commands["citest"] = {
   summary: "Do a full gergich test based on the current commit",
-  action: ->() {
+  action: -> {
     # automagically test any new command that comes along
     run_ci_test!(commands.keys)
   },
-  help: ->() {
+  help: -> {
     <<-TEXT
 gergich citest
 

@@ -6,6 +6,7 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
   let(:rtl_enabled) { "The project references RTL attributes, but does not explicitly enable or disable RTL support with android:supportsRtl in the manifest [RtlEnabled]" }
   let(:lint_error) { 'No .class files were found in project "0.0.2", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]' }
   let(:unused_quantity) { 'For language "fr" (French) the following quantities are not relevant: few, zero [UnusedQuantity]' }
+  # rubocop:enable Metrics/LineLength
   let(:output) do
     <<-OUTPUT
 /path/to/some.xml:27: Warning: #{rtl_hardcoded}
@@ -28,7 +29,9 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
       {
         path: "/path/to/some.xml",
         position: 27,
+        # rubocop:disable Metrics/LineLength
         message: "[androidlint] #{rtl_hardcoded}\n\n    android:drawableLeft=\"@drawable/ic_cv_media\"/>\n    ~~~~~~~~~~~~~~~~~~~~",
+        # rubocop:enable Metrics/LineLength
         severity: "warn"
       },
       {

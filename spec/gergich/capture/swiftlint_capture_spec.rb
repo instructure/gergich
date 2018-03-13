@@ -5,6 +5,7 @@ RSpec.describe Gergich::Capture::SwiftlintCapture do
   let(:colon_violation) { "Colon Violation: Colons should be next to the identifier when specifying a type. (colon)" }
   let(:line_length_violation) { "Line Length Violation: Line should be 100 characters or less: currently 129 characters (line_length)" }
   let(:force_cast_violation) { "Force Cast Violation: Force casts should be avoided. (force_cast)" }
+  # rubocop:enable Metrics/LineLength
   let(:output) do
     <<-OUTPUT
 /path/to/My.swift:13:22: warning: #{colon_violation}
