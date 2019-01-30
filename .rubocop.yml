@@ -1,5 +1,5 @@
 AllCops:
-  TargetRubyVersion: 2.2.0
+  TargetRubyVersion: 2.4.0
 
 Documentation:
   Enabled: false
@@ -13,22 +13,19 @@ Style/MultilineTernaryOperator:
   Enabled: false
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
+    '%W': '[]'
     '%i': '[]'
     '%w': '[]'
-    '%W': '[]'
 Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StderrPuts:
   Enabled: false
-Layout/IndentHash:
+Layout/IndentFirstHashElement:
   Enabled: false
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
-# re-enable this when our min ruby is 2.3
-Layout/IndentHeredoc:
-  Enabled: false
 Metrics/LineLength:
   Max: 100
 Metrics/MethodLength:

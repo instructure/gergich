@@ -49,9 +49,4 @@ fi
 
 run_command bin/check_coverage
 
-if [[ "$GEMNASIUM_TOKEN" && "$GEMNASIUM_ENABLED" ]]; then
-  # Push our dependency specification files to gemnasium for analysis
-  run_command gemnasium dependency_files push -f=gergich.gemspec
-fi
-
 clean_up_and_exit

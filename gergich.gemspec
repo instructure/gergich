@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Gem::Specification.new do |s|
   s.name                  = "gergich"
   s.version               = "0.2.2"
@@ -11,7 +13,7 @@ Gem::Specification.new do |s|
   s.homepage              = "https://github.com/instructure/gergich"
   s.license               = "MIT"
 
-  s.required_ruby_version = ">= 2.2.0"
+  s.required_ruby_version = ">= 2.4.0"
 
   s.add_dependency "httparty", "~> 0.16"
   s.add_dependency "sqlite3", "~> 1.3"
@@ -19,5 +21,5 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rake", "~> 12.0"
   s.add_development_dependency "rspec", "~> 3.5"
   s.add_development_dependency "rubocop", "~> 0.49"
-  s.add_development_dependency "simplecov", "~> 0.13.0"
+  s.add_development_dependency "simplecov", "~> 0.16.0"
 end
