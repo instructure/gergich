@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../../lib/gergich/capture"
 
 RSpec.describe "CustomCaptor" do
@@ -12,8 +14,8 @@ RSpec.describe "CustomCaptor" do
   let(:described_class) { CustomCaptor }
   let(:capture_format) { "custom:sqlite3:CustomCaptor" }
   let(:output) do
-    <<-OUTPUT
-foo.rb:1: you done screwed up
+    <<~OUTPUT
+      foo.rb:1: you done screwed up
     OUTPUT
   end
   let(:comments) do

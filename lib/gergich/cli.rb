@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "shellwords"
 require "English"
 
@@ -38,7 +40,7 @@ def help_command(commands)
       end
     },
     help: -> {
-      indentation = commands.keys.map(&:size).sort.last
+      indentation = commands.keys.map(&:size).max
       commands_help = commands
         .to_a
         .sort_by(&:first)

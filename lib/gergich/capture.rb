@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../gergich"
 require "English"
 
@@ -35,6 +37,7 @@ module Gergich
         if add_comments
           comments.each do |comment|
             next if skip_paths.any? { |path| comment[:path].start_with?(path) }
+
             draft.add_comment comment[:path], comment[:position],
                               comment[:message], comment[:severity]
           end
@@ -67,12 +70,12 @@ module Gergich
       end
 
       def wiretap(io, suppress_output)
-        output = ""
+        output = []
         io.each do |line|
           $stdout.puts line unless suppress_output
           output << line
         end
-        output
+        output.join("")
       end
 
       def load_captor(format)
@@ -81,6 +84,7 @@ module Gergich
         else
           captor = captors[format]
           raise GergichError, "Unrecognized format `#{format}`" unless captor
+
           captor
         end
       end

@@ -1,12 +1,14 @@
+# frozen_string_literal: true
+
 module Gergich
   module Capture
     class BrakemanCapture < BaseCapture
       # Map Brakeman "confidence level" to severity.
       # http://brakemanscanner.org/docs/confidence/
       SEVERITY_MAP = {
-        "Weak"   => "warn",
+        "Weak" => "warn",
         "Medium" => "warn",
-        "High"   => "error"
+        "High" => "error"
       }.freeze
 
       def run(output)

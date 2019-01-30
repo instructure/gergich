@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../cli"
 require_relative "../../gergich"
 
@@ -12,11 +14,11 @@ CI_TEST_ARGS = {
   ],
   "label" => ["Code-Review", 1],
   "message" => ["this is a test"],
-  "capture" => ["rubocop", "echo #{Shellwords.escape(<<-OUTPUT)}"]
-bin/gergich:47:8: C: Prefer double-quoted strings
-if ENV['DEBUG']
-       ^^^^^^^
-OUTPUT
+  "capture" => ["rubocop", "echo #{Shellwords.escape(<<~OUTPUT)}"]
+    bin/gergich:47:8: C: Prefer double-quoted strings
+    if ENV['DEBUG']
+           ^^^^^^^
+  OUTPUT
 }.freeze
 
 def run_ci_test!(all_commands)
@@ -52,11 +54,11 @@ commands["reset"] = {
     Gergich::Draft.new.reset!
   },
   help: -> {
-    <<-TEXT
-gergich reset
+    <<~TEXT
+      gergich reset
 
-Clear out the draft for this patchset. Useful for testing.
-TEXT
+      Clear out the draft for this patchset. Useful for testing.
+    TEXT
   }
 }
 
@@ -70,16 +72,16 @@ commands["publish"] = {
     end
   },
   help: -> {
-    <<-TEXT
-gergich publish
+    <<~TEXT
+      gergich publish
 
-Publish all draft comments/labels/messages for this patchset. no-op if
-there are none.
+      Publish all draft comments/labels/messages for this patchset. no-op if
+      there are none.
 
-The cover message and Code-Review label (e.g. -2) are inferred from the
-comments, but labels and messages may be manually set (via `gergich
-message` and `gergich labels`)
-TEXT
+      The cover message and Code-Review label (e.g. -2) are inferred from the
+      comments, but labels and messages may be manually set (via `gergich
+      message` and `gergich labels`)
+    TEXT
   }
 }
 
@@ -89,14 +91,14 @@ commands["status"] = {
     Gergich::Review.new.status
   },
   help: -> {
-    <<-TEXT
-gergich status
+    <<~TEXT
+      gergich status
 
-Show the current draft for this patchset
+      Show the current draft for this patchset
 
-Display any labels, cover messages and inline comments that will be set
-as part of this review.
-TEXT
+      Display any labels, cover messages and inline comments that will be set
+      as part of this review.
+    TEXT
   }
 }
 
@@ -105,8 +107,8 @@ commands["comment"] = {
   action: ->(comment_data) {
     comment_data = begin
       JSON.parse(comment_data)
-    rescue JSON::ParserError
-      error("Unable to parse <comment_data> json", "comment")
+                   rescue JSON::ParserError
+                     error("Unable to parse <comment_data> json", "comment")
     end
     comment_data = [comment_data] unless comment_data.is_a?(Array)
 
@@ -119,35 +121,35 @@ commands["comment"] = {
     end
   },
   help: -> {
-    <<-TEXT
-gergich comment <comment_data>
+    <<~TEXT
+      gergich comment <comment_data>
 
-<comment_data> is a JSON object (or array of objects). Each comment object
-should have the following properties:
-  path     - the relative file path, e.g. "app/models/user.rb"
-  position - either a number (line) or an object (range). If an object,
-             must have the following numeric properties:
-               * start_line
-               * start_character
-               * end_line
-               * end_character
-  message  - the text of the comment
-  severity - "info"|"warn"|"error" - this will automatically prefix the
-             comment (e.g. "[ERROR] message here"), and the most severe
-             comment will be used to determine the overall Code-Review
-             score (0, -1, or -2 respectively)
+      <comment_data> is a JSON object (or array of objects). Each comment object
+      should have the following properties:
+        path     - the relative file path, e.g. "app/models/user.rb"
+        position - either a number (line) or an object (range). If an object,
+                   must have the following numeric properties:
+                     * start_line
+                     * start_character
+                     * end_line
+                     * end_character
+        message  - the text of the comment
+        severity - "info"|"warn"|"error" - this will automatically prefix the
+                   comment (e.g. "[ERROR] message here"), and the most severe
+                   comment will be used to determine the overall Code-Review
+                   score (0, -1, or -2 respectively)
 
-Note that a cover message and Code-Review score will be inferred from the
-most severe comment.
+      Note that a cover message and Code-Review score will be inferred from the
+      most severe comment.
 
-Examples
-    gergich comment '{"path":"foo.rb","position":3,"severity":"error",
-                      "message":"ಠ_ಠ"}'
-    gergich comment '{"path":"bar.rb","severity":"warn",
-                      "position":{"start_line":3,"start_character":5,...},
-                      "message":"¯\\_(ツ)_/¯"}'
-    gergich comment '[{"path":"baz.rb",...}, {...}, {...}]'
-TEXT
+      Examples
+          gergich comment '{"path":"foo.rb","position":3,"severity":"error",
+                            "message":"ಠ_ಠ"}'
+          gergich comment '{"path":"bar.rb","severity":"warn",
+                            "position":{"start_line":3,"start_character":5,...},
+                            "message":"¯\\_(ツ)_/¯"}'
+          gergich comment '[{"path":"baz.rb",...}, {...}, {...}]'
+    TEXT
   }
 }
 
@@ -158,12 +160,12 @@ commands["message"] = {
     draft.add_message message
   },
   help: -> {
-    <<-TEXT
-gergich message <message>
+    <<~TEXT
+      gergich message <message>
 
-<message> will be appended to existing cover messages (inferred or manually
-added) for this patchset.
-TEXT
+      <message> will be appended to existing cover messages (inferred or manually
+      added) for this patchset.
+    TEXT
   }
 }
 
@@ -173,15 +175,15 @@ commands["label"] = {
     Gergich::Draft.new.add_label label, score
   },
   help: -> {
-    <<-TEXT
-gergich label <label> <score>
+    <<~TEXT
+      gergich label <label> <score>
 
-Add a draft label to this patchset. If the same label is set multiple
-times, the lowest score will win.
+      Add a draft label to this patchset. If the same label is set multiple
+      times, the lowest score will win.
 
-<label>  - a valid label (e.g. "Code-Review")
-<score>  - a valid score (e.g. -1)
-TEXT
+      <label>  - a valid label (e.g. "Code-Review")
+      <score>  - a valid score (e.g. -1)
+    TEXT
   }
 }
 
@@ -193,40 +195,40 @@ commands["capture"] = {
     exit status
   },
   help: -> {
-    <<-TEXT
-gergich capture <format> <command>
+    <<~TEXT
+      gergich capture <format> <command>
 
-For common linting formats, `gergich capture` can be used to automatically
-do `gergich comment` calls so you don't have to wire it up yourself.
+      For common linting formats, `gergich capture` can be used to automatically
+      do `gergich comment` calls so you don't have to wire it up yourself.
 
-<format>        - One of the following:
-                  * brakeman
-                  * rubocop
-                  * eslint
-                  * i18nliner
-                  * flake8
-                  * stylelint
-                  * custom:<path>:<class_name> - file path and ruby
-                    class_name of a custom formatter.
+      <format>        - One of the following:
+                        * brakeman
+                        * rubocop
+                        * eslint
+                        * i18nliner
+                        * flake8
+                        * stylelint
+                        * custom:<path>:<class_name> - file path and ruby
+                          class_name of a custom formatter.
 
-<command>       - The command to run whose output conforms to <format>.
-                  Output from the command will still go to STDOUT, and
-                  Gergich will preserve its exit status.
-                  If command is "-", Gergich will simply read from STDIN
-                  and the exit status will always be 0.
+      <command>       - The command to run whose output conforms to <format>.
+                        Output from the command will still go to STDOUT, and
+                        Gergich will preserve its exit status.
+                        If command is "-", Gergich will simply read from STDIN
+                        and the exit status will always be 0.
 
-Examples:
-    gergich capture rubocop "bundle exec rubocop"
+      Examples:
+          gergich capture rubocop "bundle exec rubocop"
 
-    gergich capture eslint eslint
+          gergich capture eslint eslint
 
-    gergich capture i18nliner "rake i18nliner:check"
+          gergich capture i18nliner "rake i18nliner:check"
 
-    gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
+          gergich capture custom:./gergich/xss:Gergich::XSS "node script/xsslint"
 
-    docker-compose run --rm web eslint | gergich capture eslint -
-    # you might be interested in $PIPESTATUS[0]
-TEXT
+          docker-compose run --rm web eslint | gergich capture eslint -
+          # you might be interested in $PIPESTATUS[0]
+    TEXT
   }
 }
 
@@ -237,18 +239,18 @@ commands["citest"] = {
     run_ci_test!(commands.keys)
   },
   help: -> {
-    <<-TEXT
-gergich citest
+    <<~TEXT
+      gergich citest
 
-You shouldn't need to run this locally, it runs on jenkins. It does the
-following:
+      You shouldn't need to run this locally, it runs on jenkins. It does the
+      following:
 
-1. runs all the gergich commands (w/ dummy data)
-2. ensure all `help` commands work
-3. ensures gergich status is correct
-4. resets
-5. posts an actual +1
-6. publishes
+      1. runs all the gergich commands (w/ dummy data)
+      2. ensure all `help` commands work
+      3. ensures gergich status is correct
+      4. resets
+      5. posts an actual +1
+      6. publishes
     TEXT
   }
 }

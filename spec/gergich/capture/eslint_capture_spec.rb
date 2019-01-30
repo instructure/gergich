@@ -1,11 +1,13 @@
+# frozen_string_literal: true
+
 require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::EslintCapture do
   let(:output) do
-    <<-OUTPUT
-jsapp/models/user.js
-  4:21  error    Missing semicolon  semi
-  5:1   warning  Too much cowbell   cowbell-overload
+    <<~OUTPUT
+      jsapp/models/user.js
+        4:21  error    Missing semicolon  semi
+        5:1   warning  Too much cowbell   cowbell-overload
     OUTPUT
   end
   let(:comments) do

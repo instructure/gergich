@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../lib/gergich/capture"
 
 RSpec.shared_examples_for "a captor" do

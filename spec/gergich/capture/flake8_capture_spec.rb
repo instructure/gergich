@@ -1,9 +1,11 @@
+# frozen_string_literal: true
+
 require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::Flake8Capture do
   let(:output) do
-    <<-OUTPUT
-./djangogeneric/settings/base.py:73:80: E501 line too long (81 > 79 characters)
+    <<~OUTPUT
+      ./djangogeneric/settings/base.py:73:80: E501 line too long (81 > 79 characters)
     OUTPUT
   end
   let(:comments) do

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 RSpec.describe Gergich::API do
   context "bad change-id" do
     let(:result) { double(:result, body: "Not Found: 1234") }

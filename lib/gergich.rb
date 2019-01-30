@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "erb"
 require "sqlite3"
 require "json"
@@ -246,7 +248,7 @@ module Gergich
       score = upcoming_score
       prefix_parts = []
       prefix_parts << unique_comment_prefix if multi_build_setup?
-      prefix_parts << score if score < 0
+      prefix_parts << score if score.negative?
       prefix_parts.join(":")
       # [].join(":") => ""
       # [-2].join(":") => "-2"
@@ -294,7 +296,8 @@ module Gergich
         ret = HTTParty.send(method, url, options).body
         return ret if options[:raw]
 
-        if ret.sub!(/\A\)\]\}'\n/, "") && ret =~ /\A("|\[|\{)/
+        ret = ret.sub(/\A\)\]\}'\n/, "")
+        if ret && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         elsif ret =~ /Not found: (?<change_id>.*)/i
           raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]} at #{url}.\n"\
@@ -526,21 +529,21 @@ module Gergich
     end
 
     def orphaned_message
-      message = "NOTE: I couldn't create inline comments for everything. " \
+      messages = ["NOTE: I couldn't create inline comments for everything. " \
                 "Although this isn't technically part of your commit, you " \
                 "should still check it out (i.e. side effects or auto-" \
-                "generated from stuff you *did* change):"
+                "generated from stuff you *did* change):"]
 
       other_comments.each do |file|
         file.comments.each do |position, comments|
           comments.each do |comment|
             line = position.is_a?(Integer) ? position : position["start_line"]
-            message << "\n\n#{file.path}:#{line}: #{comment}"
+            messages << "#{file.path}:#{line}: #{comment}"
           end
         end
       end
 
-      message
+      messages.join("\n\n")
     end
 
     def cover_message_parts

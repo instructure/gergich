@@ -1,13 +1,15 @@
+# frozen_string_literal: true
+
 require_relative "../../lib/gergich/capture"
 
 RSpec.describe Gergich::Capture do
   let!(:draft) { double }
 
   let :output do
-    <<-OUTPUT
-#{path}
-  4:21  error  Missing semicolon  semi
-OUTPUT
+    <<~OUTPUT
+      #{path}
+        4:21  error  Missing semicolon  semi
+    OUTPUT
   end
 
   before do

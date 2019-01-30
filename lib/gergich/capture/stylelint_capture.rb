@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gergich
   module Capture
     class StylelintCapture < BaseCapture
@@ -14,7 +16,7 @@ module Gergich
       #   2:15  ✖  Unexpected invalid hex color "#2D3B4"   color-no-invalid-hex
       #  30:15  ⚠  Expected "#2d3b4a" to be "#2D3B4A"      color-hex-case
 
-      MESSAGE_PREFIX = "[stylelint]".freeze
+      MESSAGE_PREFIX = "[stylelint]"
 
       SEVERITY_MAP = {
         "✖" => "error",
@@ -23,14 +25,14 @@ module Gergich
 
       # example file line:
       # app/stylesheets/base/_variables.scss
-      FILE_PATH_PATTERN = /([^\n]+)\n/
+      FILE_PATH_PATTERN = /([^\n]+)\n/.freeze
 
       # example error line:
       #   1:15  ✖  Unexpected invalid hex color "#2D3B4"   color-no-invalid-hex
-      ERROR_PATTERN = /^\s+(\d+):\d+\s+(✖|⚠)\s+(.*?)\s\s+[^\n]+\n/
+      ERROR_PATTERN = /^\s+(\d+):\d+\s+(✖|⚠)\s+(.*?)\s\s+[^\n]+\n/.freeze
       # rubocop:enable Style/AsciiComments
 
-      PATTERN = /#{FILE_PATH_PATTERN}((#{ERROR_PATTERN})+)/
+      PATTERN = /#{FILE_PATH_PATTERN}((#{ERROR_PATTERN})+)/.freeze
 
       def run(output)
         output.scan(PATTERN).map { |file, errors|

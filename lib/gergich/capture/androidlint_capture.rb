@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gergich
   module Capture
     class AndroidlintCapture < BaseCapture

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::AndroidlintCapture do
@@ -8,18 +10,18 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
   let(:unused_quantity) { 'For language "fr" (French) the following quantities are not relevant: few, zero [UnusedQuantity]' }
   # rubocop:enable Metrics/LineLength
   let(:output) do
-    <<-OUTPUT
-/path/to/some.xml:27: Warning: #{rtl_hardcoded}
-    android:drawableLeft="@drawable/ic_cv_media"/>
-    ~~~~~~~~~~~~~~~~~~~~
+    <<~OUTPUT
+      /path/to/some.xml:27: Warning: #{rtl_hardcoded}
+          android:drawableLeft="@drawable/ic_cv_media"/>
+          ~~~~~~~~~~~~~~~~~~~~
 
-/path/to/AndroidManifest.xml: Warning: #{rtl_enabled}
+      /path/to/AndroidManifest.xml: Warning: #{rtl_enabled}
 
-/path/to/library/0.0.2: Error: #{lint_error}
+      /path/to/library/0.0.2: Error: #{lint_error}
 
-/path/to/values.xml:5: Warning: #{unused_quantity}
-    <plurals name="number">
-    ^
+      /path/to/values.xml:5: Warning: #{unused_quantity}
+          <plurals name="number">
+          ^
 
     OUTPUT
   end

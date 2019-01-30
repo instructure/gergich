@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative "../cli"
 
 ENV["GERGICH_USER"] = ENV.fetch("MASTER_BOUNCER_USER", "master_bouncer")
@@ -71,12 +73,12 @@ commands["check"] = {
     maybe_bounce_commit! Gergich::Commit.new
   },
   help: -> {
-    <<-TEXT
-master_bouncer check
+    <<~TEXT
+      master_bouncer check
 
-Check the current commit's age, and bounce it if it's too old (-1 or -2,
-depending on the threshold)
-TEXT
+      Check the current commit's age, and bounce it if it's too old (-1 or -2,
+      depending on the threshold)
+    TEXT
   }
 }
 
@@ -103,11 +105,11 @@ commands["check_all"] = {
     end
   },
   help: -> {
-    <<-TEXT
-master_bouncer check_all
+    <<~TEXT
+      master_bouncer check_all
 
-Check all open Verified+1 patchsets and bounce any that are too old.
-TEXT
+      Check all open Verified+1 patchsets and bounce any that are too old.
+    TEXT
   }
 }
 

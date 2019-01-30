@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Gergich
   module Capture
     class Flake8Capture < BaseCapture
