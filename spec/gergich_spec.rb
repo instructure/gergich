@@ -258,7 +258,6 @@ RSpec.describe Gergich::Review do
 
       it "publishes via the api" do
         expect(Gergich::API).to receive(:post)
-        allow(review).to receive(:change_name?).and_return(false)
         review.publish!
       end
     end

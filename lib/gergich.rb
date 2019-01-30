@@ -105,14 +105,7 @@ module Gergich
 
       API.post(generate_url, generate_payload)
 
-      # because why not
-      API.put("/accounts/self/name", { name: whats_his_face }.to_json) if change_name?
-
       review_info
-    end
-
-    def change_name?
-      ENV["GERGICH_CHANGE_NAME"] != "0" && rand < 0.01 && GERGICH_USER == "gergich"
     end
 
     def anything_to_publish?
@@ -225,6 +218,7 @@ module Gergich
     # then grab the comment's revision.
     def current_label_revision
       return nil if my_messages.empty?
+
       @current_label_revision ||= begin
         date = current_label_date
         comment_for_current_label = my_messages.find { |message| message["date"] == date } ||
@@ -257,10 +251,6 @@ module Gergich
       # [].join(":") => ""
       # [-2].join(":") => "-2"
       # ["some build prefix", -2].join(":") => "some build prefix:-2"
-    end
-
-    def whats_his_face
-      "#{%w[Garry Larry Terry Jerry].sample} Gergich (Bot)"
     end
 
     def review_info
@@ -453,6 +443,7 @@ module Gergich
       stripped_path = path.strip
 
       raise GergichError, "invalid position `#{position}`" unless valid_position?(position)
+
       position = position.to_json if position.is_a?(Hash)
       raise GergichError, "invalid severity `#{severity}`" unless SEVERITY_MAP.key?(severity)
       raise GergichError, "no message specified" unless message.is_a?(String) && !message.empty?
