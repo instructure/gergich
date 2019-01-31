@@ -31,9 +31,10 @@ def run_ci_test!(all_commands)
 
   # after running our test commands, reset and publish frd:
   commands << ["reset"]
-  commands << ["label", ["QA-Review", 1]]
-  commands << ["label", ["Product-Review", 1]]
-  commands << ["label", ["Code-Review", 1]]
+  # Note that while gergich should always be able to vote on these labels, he may be used to
+  # vone on other branches depending on project usage and project-specific permissions
+  commands << ["label", ["Lint-Review", 1]]
+  commands << ["label", ["Code-Review", 1]] # Not all projects have Lint-Review
   commands << ["message", ["\`gergich citest\` checks out :thumbsup: :mj:"]]
   commands << ["publish"]
 
