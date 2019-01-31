@@ -217,16 +217,18 @@ RSpec.describe Gergich::Draft do
 end
 
 RSpec.describe Gergich::Review do
+  let(:change_id) { "test" }
   let!(:commit) do
     double(
       :commit,
+      change_id: change_id,
       files: [
         "foo.rb",
         "bar/baz.lol"
       ],
-      revision_id: "test",
-      revision_number: 1,
-      change_id: "test"
+      info: {},
+      revision_id: change_id,
+      revision_number: 1
     )
   end
   let!(:draft) do
@@ -236,6 +238,37 @@ RSpec.describe Gergich::Review do
 
   after do
     draft.reset!
+  end
+
+  describe "#status" do
+    subject { review.status }
+
+    context "nothing to publish" do
+      before :each do
+        allow(review).to receive(:anything_to_publish?).and_return(false)
+      end
+      it { expect { subject }.to output(include("Nothing to publish")).to_stdout }
+    end
+
+    context "something to publish" do
+      before :each do
+        allow(review).to receive(:anything_to_publish?).and_return(true)
+        allow(review).to receive(:already_commented?).and_return(false)
+        allow(review).to receive(:generate_payload).and_return({})
+        allow(review).to receive(:my_messages).and_return([])
+      end
+      it {
+        expected_outputs = [
+          "Project:",
+          "Branch:",
+          "Revision:",
+          "ChangeId: #{change_id}",
+          "Files:"
+          # There's more... but this is good
+        ]
+        expect { subject }.to output(include(*expected_outputs)).to_stdout
+      }
+    end
   end
 
   describe "#publish!" do

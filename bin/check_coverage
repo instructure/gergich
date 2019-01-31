@@ -4,5 +4,5 @@
 require "simplecov"
 
 SimpleCov.command_name "check_coverage"
-SimpleCov.minimum_coverage 90
+SimpleCov.minimum_coverage 85
 SimpleCov.at_exit { SimpleCov.result.format! }
