@@ -99,6 +99,11 @@ RSpec.describe Gergich::Draft do
         expect(subject).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
       end
 
+      it "strips whitespace from filename" do
+        draft.add_comment " foo.rb\n", 1, "fix foo", "info"
+        expect(subject).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
+      end
+
       it "includes COMMIT_MSG comments" do
         draft.add_comment "/COMMIT_MSG", 1, "fix commit", "info"
         expect(subject).to eq("/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }])
