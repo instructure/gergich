@@ -20,7 +20,8 @@ module Gergich
 
       SEVERITY_MAP = {
         "✖" => "error",
-        "⚠" => "warn"
+        "⚠" => "warn",
+        "ℹ" => "info"
       }.freeze
 
       # example file line:
@@ -29,7 +30,7 @@ module Gergich
 
       # example error line:
       #   1:15  ✖  Unexpected invalid hex color "#2D3B4"   color-no-invalid-hex
-      ERROR_PATTERN = /^\s+(\d+):\d+\s+(✖|⚠)\s+(.*?)\s\s+[^\n]+\n/.freeze
+      ERROR_PATTERN = /^\s+(\d+):\d+\s+(✖|⚠|ℹ)\s+(.*?)\s\s+[^\n]+\n/.freeze
       # rubocop:enable Style/AsciiComments
 
       PATTERN = /#{FILE_PATH_PATTERN}((#{ERROR_PATTERN})+)/.freeze

@@ -12,6 +12,7 @@ RSpec.describe Gergich::Capture::StylelintCapture do
       app/stylesheets/base/_variables.scss
         2:15  ✖  Unexpected invalid hex color "#2D3B4"   color-no-invalid-hex
        30:15  ⚠  Expected "#2d3b4a" to be "#2D3B4A"      color-hex-case
+       45:12  ℹ  Expected "#2d3b4a" to be "#2D3B4A"      color-hex-case
     OUTPUT
   end
   let(:comments) do
@@ -39,6 +40,12 @@ RSpec.describe Gergich::Capture::StylelintCapture do
         position: 30,
         message: "[stylelint] Expected \"#2d3b4a\" to be \"#2D3B4A\"",
         severity: "warn"
+      },
+      {
+        path: "app/stylesheets/base/_variables.scss",
+        position: 45,
+        message: "[stylelint] Expected \"#2d3b4a\" to be \"#2D3B4A\"",
+        severity: "info"
       }
     ]
   end
