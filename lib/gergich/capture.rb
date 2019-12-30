@@ -12,7 +12,7 @@ module Gergich
       end
 
       def self.normalize_captor_class_name(subclass)
-        name = subclass.name
+        name = subclass.name.dup
         # borrowed from AS underscore, since we may not have it
         name.gsub!(/.*::|Capture\z/, "")
         name.gsub!(/([A-Z\d]+)([A-Z][a-z])/, "\\1_\\2")
@@ -109,4 +109,4 @@ module Gergich
   end
 end
 
-Dir[File.dirname(__FILE__) + "/capture/*.rb"].each { |file| require file }
+Dir[File.dirname(__FILE__) + "/capture/*.rb"].sort.each { |file| require file }

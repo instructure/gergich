@@ -20,13 +20,13 @@ Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StderrPuts:
   Enabled: false
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   Enabled: false
 Layout/MultilineMethodCallIndentation:
   EnforcedStyle: indented
 Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
-Metrics/LineLength:
+Layout/LineLength:
   Max: 100
 Metrics/MethodLength:
   Max: 30
