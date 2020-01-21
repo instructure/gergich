@@ -11,7 +11,7 @@ module Gergich
       }.freeze
 
       def run(output)
-        # rubocop:disable Metrics/LineLength
+        # rubocop:disable Layout/LineLength
         #
         # Example:
         # /path/to/some.xml:27: Warning: Consider adding android:drawableStart="@drawable/a_media" to better support right-to-left layouts [RtlHardcoded]
@@ -26,7 +26,7 @@ module Gergich
         #    <plurals name="number">
         #    ^
         #
-        # rubocop:enable Metrics/LineLength
+        # rubocop:enable Layout/LineLength
         pattern = /
           ^([^:\n]+):(\d+)?:?\s(\w+):\s(.*?)\n
           ([^\n]+\n

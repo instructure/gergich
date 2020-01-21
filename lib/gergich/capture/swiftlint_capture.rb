@@ -12,13 +12,13 @@ module Gergich
       }.freeze
 
       def run(output)
-        # rubocop:disable Metrics/LineLength
+        # rubocop:disable Layout/LineLength
         #
         # Example:
         # /path/to/My.swift:13:22: warning: Colon Violation: Colons should be next to the identifier when specifying a type. (colon)
         # /path/to/Fail.swift:80: warning: Line Length Violation: Line should be 100 characters or less: currently 108 characters (line_length)
         #
-        # rubocop:enable Metrics/LineLength
+        # rubocop:enable Layout/LineLength
         pattern = /
           ^([^:\n]+):(\d+)(?::\d+)?:\s(\w+):\s(.*?)\n
         /mx

@@ -1,12 +1,11 @@
-FROM instructure/ruby:2.4-xenial
+FROM instructure/rvm
 
 ENV LANG C.UTF-8
-ENV APP_HOME /usr/src/app
 
-COPY --chown=docker:docker Gemfile gergich.gemspec $APP_HOME/
+COPY --chown=docker:docker Gemfile gergich.gemspec /usr/src/app/
+RUN mkdir -p coverage
 
-RUN bundle install --jobs 8
+RUN /bin/bash -lc "cd /usr/src/app && rvm 2.4,2.5,2.6 do bundle install --jobs 5"
+COPY --chown=docker:docker . /usr/src/app
 
-COPY --chown=docker:docker . $APP_HOME
-
-CMD ["bin/run_tests.sh"]
+CMD /bin/bash -lc "rvm-exec 2.6 bin/run_tests.sh"

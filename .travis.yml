@@ -1,14 +1,15 @@
-sudo: false
 cache: bundler
 language: ruby
+
 rvm:
-  - 2.3.1
+  - 2.4
+  - 2.5
+  - 2.6
+
 before_install: gem update --remote bundler
-install:
-  - bundle install --retry=3
+bundler_args: --jobs 3
+install: bundle install --jobs 3
+
 script:
+  - bundle exec rubocop --fail-level autocorrect
   - bundle exec rake
-notifications:
-  email:
-    on_success: never
-    on_failure: never

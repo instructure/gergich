@@ -14,7 +14,7 @@ CI_TEST_ARGS = {
   ],
   "label" => ["Code-Review", 1],
   "message" => ["this is a test"],
-  "capture" => ["rubocop", "echo #{Shellwords.escape(<<~OUTPUT)}"]
+  "capture" => ["rubocop", format("echo %<output>s", output: Shellwords.escape(<<~OUTPUT))]
     bin/gergich:47:8: C: Prefer double-quoted strings
     if ENV['DEBUG']
            ^^^^^^^

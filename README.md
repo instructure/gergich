@@ -1,7 +1,6 @@
 # Gergich
 
 [![Gem Version](https://badge.fury.io/rb/gergich.svg)](https://rubygems.org/gems/gergich)
-[![Dependency Status](https://gemnasium.com/badges/a2946a7849cd94f5ec0f4c3173a968f4.svg)](https://gemnasium.com/cc6fb44edee9fcf855cec82d3b6aed0f)
 [![Build Status](https://travis-ci.org/instructure/gergich.svg?branch=master)](https://travis-ci.org/instructure/gergich)
 
 Gergich is a command-line tool (and ruby lib) for easily posting comments

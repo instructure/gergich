@@ -1,12 +1,30 @@
 AllCops:
-  TargetRubyVersion: 2.4.0
+  TargetRubyVersion: 2.4
 
-Documentation:
+Layout/LineLength:
+  Max: 100
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+Layout/EndAlignment:
+  EnforcedStyleAlignWith: variable
+
+Metrics/AbcSize:
+  Max: 50
+Metrics/BlockLength:
   Enabled: false
+Metrics/ClassLength:
+  Max: 150
+Metrics/CyclomaticComplexity:
+  Max: 10
+Metrics/MethodLength:
+  Max: 30
+
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 Style/BracesAroundHashParameters:
   EnforcedStyle: context_dependent
+Style/Documentation:
+  Enabled: false
 Style/Lambda:
   Enabled: false
 Style/MultilineTernaryOperator:
@@ -20,21 +38,3 @@ Style/StringLiterals:
   EnforcedStyle: double_quotes
 Style/StderrPuts:
   Enabled: false
-Layout/FirstHashElementIndentation:
-  Enabled: false
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-Layout/EndAlignment:
-  EnforcedStyleAlignWith: variable
-Layout/LineLength:
-  Max: 100
-Metrics/MethodLength:
-  Max: 30
-Metrics/BlockLength:
-  Enabled: false
-Metrics/ClassLength:
-  Max: 150
-Metrics/CyclomaticComplexity:
-  Max: 10
-Metrics/AbcSize:
-  Max: 50
