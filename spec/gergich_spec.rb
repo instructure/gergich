@@ -90,6 +90,21 @@ RSpec.describe Gergich::Draft do
     draft.reset!
   end
 
+  context "#GERGICH_DB_PATH" do
+    it "uses the custom path" do
+      original_db_path = ENV["GERGICH_DB_PATH"]
+      ENV["GERGICH_DB_PATH"] = "/custom"
+
+      expect(draft.db_file).to eq("/custom/gergich-test.sqlite3")
+
+      ENV["GERGICH_DB_PATH"] = original_db_path
+    end
+
+    it "uses the default path" do
+      expect(draft.db_file).to eq("/tmp/gergich-test.sqlite3")
+    end
+  end
+
   describe "#info" do
     subject { draft.info }
 

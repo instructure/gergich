@@ -363,7 +363,9 @@ module Gergich
     end
 
     def db_file
-      @db_file ||= File.expand_path("/tmp/#{GERGICH_USER}-#{commit.revision_id}.sqlite3")
+      @db_file ||= File.expand_path(
+        "#{ENV.fetch('GERGICH_DB_PATH', '/tmp')}/#{GERGICH_USER}-#{commit.revision_id}.sqlite3"
+      )
     end
 
     def db
