@@ -209,6 +209,7 @@ commands["capture"] = {
                         * i18nliner
                         * flake8
                         * stylelint
+                        * yamllint
                         * custom:<path>:<class_name> - file path and ruby
                           class_name of a custom formatter.
 

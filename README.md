@@ -106,6 +106,7 @@ do `gergich comment` calls so you don't have to wire it up yourself.
 * `i18nliner`
 * `flake8`
 * `stylelint`
+* `yamllint`
 * `shellcheck` - shellcheck json output
 * `custom:<path>:<class_name>` - file path and ruby class_name of a custom
   formatter.
