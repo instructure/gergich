@@ -18,7 +18,9 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                sh 'docker network prune -f'
                 sh 'docker-compose down --rmi=all --volumes --remove-orphans'
+                sh 'docker network create -d bridge gergich_default'
                 sh 'docker-compose build --pull'
             }
         }
