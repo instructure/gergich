@@ -1,10 +1,8 @@
 # frozen_string_literal: true
 
 require "erb"
-require "sqlite3"
 require "json"
 require "fileutils"
-require "httparty"
 require "base64"
 
 GERGICH_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
@@ -292,6 +290,8 @@ module Gergich
       private
 
       def perform(method, url, options)
+        # delay requiring httparty until here, to make local command line runs as fast as possible
+        require "httparty"
         options = prepare_options(options)
         ret = HTTParty.send(method, url, options).body
         return ret if options[:raw]
@@ -370,6 +370,7 @@ module Gergich
 
     def db
       @db ||= begin
+        require "sqlite3"
         db_exists = File.exist?(db_file)
         db = SQLite3::Database.new(db_file)
         db.results_as_hash = true
