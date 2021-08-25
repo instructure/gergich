@@ -7,6 +7,7 @@ module Gergich
   module Capture
     class BaseCapture
       def self.inherited(subclass)
+        super
         name = normalize_captor_class_name(subclass)
         Capture.captors[name] = subclass
       end
@@ -47,7 +48,7 @@ module Gergich
       end
 
       def base_path
-        @base_path ||= File.expand_path(GERGICH_GIT_PATH) + "/"
+        @base_path ||= "#{File.expand_path(GERGICH_GIT_PATH)}/"
       end
 
       def relativize(path)
@@ -75,7 +76,7 @@ module Gergich
           $stdout.puts line unless suppress_output
           output << line
         end
-        output.join("")
+        output.join
       end
 
       def load_captor(format)
@@ -109,4 +110,4 @@ module Gergich
   end
 end
 
-Dir[File.dirname(__FILE__) + "/capture/*.rb"].sort.each { |file| require file }
+Dir["#{File.dirname(__FILE__)}/capture/*.rb"].sort.each { |file| require file }

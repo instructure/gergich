@@ -12,7 +12,7 @@ def info(text)
 end
 
 def script_name
-  $PROGRAM_NAME.sub(%r{.*\/}, "")
+  $PROGRAM_NAME.sub(%r{.*/}, "")
 end
 
 def usage(content = nil)

@@ -4,7 +4,7 @@ set -e
 
 bundle exec rubocop --fail-level autocorrect
 
-ruby -v | egrep "^ruby 2\.4" && export COVERAGE=1
+ruby -v | egrep "^ruby 2\.5" && export COVERAGE=1
 
 bundle exec rspec
 

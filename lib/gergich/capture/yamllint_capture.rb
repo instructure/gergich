@@ -9,7 +9,7 @@ module Gergich
         # e.g. "  9:5       error    string value redundantly  (quoted-strings)"
         error_pattern = %r{\s\s+(\d+):\d+\s+(\w+)\s+(.*?)\s+\([\w/-]+\)\n}
         pattern = %r{            # Example:
-          ^.\/([^\n]+)\n         #   ./api/config/lti/development/config.yml
+          ^./([^\n]+)\n         #   ./api/config/lti/development/config.yml
           ((#{error_pattern})+)  #     9:5       error    string value redundantly  (quoted-strings)
         }mx
 

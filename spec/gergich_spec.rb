@@ -136,15 +136,15 @@ RSpec.describe Gergich::Draft do
 
     describe "[:cover_message_parts]" do
       subject { super()[:cover_message_parts] }
-      let(:message_1) { "this is good" }
-      let(:message_2) { "loljk it's terrible" }
+      let(:message1) { "this is good" }
+      let(:message2) { "loljk it's terrible" }
 
       it "includes explicitly added messages" do
-        draft.add_message message_1
-        draft.add_message message_2
+        draft.add_message message1
+        draft.add_message message2
 
-        expect(subject).to include(message_1)
-        expect(subject).to include(message_2)
+        expect(subject).to include(message1)
+        expect(subject).to include(message2)
       end
 
       context "orphaned file comments exist" do

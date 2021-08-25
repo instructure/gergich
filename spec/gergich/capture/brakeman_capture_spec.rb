@@ -5,7 +5,7 @@ require_relative "../../support/capture_shared_examples"
 RSpec.describe Gergich::Capture::BrakemanCapture do
   let(:output) do
     File.read(
-      File.expand_path(File.dirname(__FILE__) + "/brakeman_example.json")
+      File.expand_path("#{File.dirname(__FILE__)}/brakeman_example.json")
     )
   end
 

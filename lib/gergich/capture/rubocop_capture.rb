@@ -49,7 +49,7 @@ module Gergich
           # if there is code context at the end, separate it and indent it
           # so that gerrit preserves formatting
           if /(?<context>[^\n]+\n *\^+\n)/m =~ message
-            message.sub!(context, "\n" + context.gsub(/^/, " "))
+            message.sub!(context, "\n#{context.gsub(/^/, ' ')}")
           end
 
           messages << {

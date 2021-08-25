@@ -109,8 +109,8 @@ commands["comment"] = {
   action: ->(comment_data) {
     comment_data = begin
       JSON.parse(comment_data)
-                   rescue JSON::ParserError
-                     error("Unable to parse <comment_data> json", "comment")
+    rescue JSON::ParserError
+      error("Unable to parse <comment_data> json", "comment")
     end
     comment_data = [comment_data] unless comment_data.is_a?(Array)
 

@@ -15,11 +15,11 @@ ERROR_DISTANCE = ENV.fetch("MASTER_BOUNCER_ERROR_DISTANCE", 100).to_i
 
 def potentially_mergeable_changes
   url = "/changes/?q=status:open+" \
-                    "p:#{PROJECT}+" \
-                    "label:Verified=1+" \
-                    "is:mergeable+" \
-                    "branch:master" \
-                 "&o=CURRENT_REVISION"
+        "p:#{PROJECT}+" \
+        "label:Verified=1+" \
+        "is:mergeable+" \
+        "branch:master" \
+        "&o=CURRENT_REVISION"
   changes = Gergich::API.get(url)
   changes.reject { |c| c["subject"] =~ /\Awip($|\W)/i }
 end
@@ -62,7 +62,7 @@ def maybe_bounce_commit!(commit)
   # similarly, over time the same patchset will become more out of date,
   # so we allow_repost (so to speak) so we can add increasingly negative
   # reviews
-  review.publish!(:allow_repost)
+  review.publish!(allow_repost: true)
 end
 
 commands = {}

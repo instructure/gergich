@@ -2,15 +2,15 @@
 
 require_relative "../../../lib/gergich/capture"
 
-RSpec.describe "CustomCaptor" do
-  class CustomCaptor
-    def run(output)
-      output.scan(/^(.+?):(\d+): (.*)$/).map do |file, line, error|
-        { path: file, message: error, position: line.to_i, severity: "error" }
-      end
+class CustomCaptor
+  def run(output)
+    output.scan(/^(.+?):(\d+): (.*)$/).map do |file, line, error|
+      { path: file, message: error, position: line.to_i, severity: "error" }
     end
   end
+end
 
+RSpec.describe "CustomCaptor" do
   let(:described_class) { CustomCaptor }
   let(:capture_format) { "custom:sqlite3:CustomCaptor" }
   let(:output) do

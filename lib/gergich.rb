@@ -51,15 +51,13 @@ module Gergich
     end
 
     def files
-      @files ||= begin
-        if Gergich.use_git?
-          Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
-        else
-          raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
-          Base64.decode64(raw)
-            .scan(%r{^diff --git a/.*? b/(.*?)$})
-            .flatten
-        end
+      @files ||= if Gergich.use_git?
+        Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
+      else
+        raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
+        Base64.decode64(raw)
+          .scan(%r{^diff --git a/.*? b/(.*?)$})
+          .flatten
       end
     end
 
@@ -70,7 +68,7 @@ module Gergich
     def revision_number
       @revision_number ||= begin
         patchset_number = ENV["GERRIT_PATCHSET_NUMBER"]
-        return patchset_number unless patchset_number.nil?
+        return patchset_number unless patchset_number.nil? # rubocop:disable Lint/NoReturnInBeginEndBlocks
 
         gerrit_info = API.get("/changes/?q=#{change_id}&o=ALL_REVISIONS")[0]
         raise GergichError, "Gerrit patchset not found" unless gerrit_info
@@ -97,7 +95,7 @@ module Gergich
     end
 
     # Public: publish all draft comments/labels/messages
-    def publish!(allow_repost = false)
+    def publish!(allow_repost: false)
       # only publish if we have something to say or if our last score was negative
       return unless anything_to_publish?
 
@@ -200,13 +198,11 @@ module Gergich
     # currently, cover message only supports the GERGICH_REVIEW_LABEL.
     # i.e., even if gergich has "Code-Review: -2"
     def current_label
-      @current_label ||= begin
-        API.get("/changes/#{commit.change_id}/detail")["labels"]
-          .fetch(GERGICH_REVIEW_LABEL, {})
-          .fetch("all", [])
-          .select { |label| label["username"] == GERGICH_USER }
-          .first
-      end
+      @current_label ||= API.get("/changes/#{commit.change_id}/detail")["labels"]
+        .fetch(GERGICH_REVIEW_LABEL, {})
+        .fetch("all", [])
+        .select { |label| label["username"] == GERGICH_USER }
+        .first
     end
 
     def current_label_date
@@ -338,7 +334,7 @@ module Gergich
 
       def prepare_options(options)
         options = {
-          base_uri: base_uri + "/a"
+          base_uri: "#{base_uri}/a"
         }.merge(auth_config).merge(options)
         if options[:body]
           options[:headers] ||= {}
@@ -515,7 +511,7 @@ module Gergich
 
     def info
       @info ||= begin
-        comments = Hash[inline_comments.map { |file| [file.path, file.to_a] }]
+        comments = inline_comments.map { |file| [file.path, file.to_a] }.to_h
 
         {
           comments: comments,
@@ -533,9 +529,9 @@ module Gergich
 
     def orphaned_message
       messages = ["NOTE: I couldn't create inline comments for everything. " \
-                "Although this isn't technically part of your commit, you " \
-                "should still check it out (i.e. side effects or auto-" \
-                "generated from stuff you *did* change):"]
+                  "Although this isn't technically part of your commit, you " \
+                  "should still check it out (i.e. side effects or auto-" \
+                  "generated from stuff you *did* change):"]
 
       other_comments.each do |file|
         file.comments.each do |position, comments|

@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.homepage              = "https://github.com/instructure/gergich"
   s.license               = "MIT"
 
-  s.required_ruby_version = ">= 2.4.0"
+  s.required_ruby_version = ">= 2.5.0"
 
   s.add_dependency "httparty", "~> 0.17"
   s.add_dependency "sqlite3", "~> 1.4"
@@ -21,6 +21,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "byebug", "~> 11.1"
   s.add_development_dependency "rake", "~> 13.0"
   s.add_development_dependency "rspec", "~> 3.9"
-  s.add_development_dependency "rubocop", "~> 0.79.0"
-  s.add_development_dependency "simplecov", "~> 0.17.1"
+  s.add_development_dependency "rubocop", "~> 1.19.1"
+  s.add_development_dependency "simplecov", "~> 0.21.2"
 end
