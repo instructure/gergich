@@ -21,10 +21,10 @@ RSpec.describe Gergich::Capture do
     $stdin = STDIN
   end
 
-  context "stdin" do
+  context "with stdin" do
     let(:path) { "jsapp/models/user.js" }
 
-    it "should catch errors" do
+    it "catches errors" do
       expect(draft).to receive(:add_comment).with(
         "jsapp/models/user.js",
         4,
@@ -34,21 +34,22 @@ RSpec.describe Gergich::Capture do
       described_class.run("eslint", "-", suppress_output: true)
     end
 
-    it "shouldn't eat stdin" do
+    it "does not eat stdin" do
       allow(draft).to receive(:add_comment)
       expect($stdout).to receive(:puts).exactly(output.lines.size).times
       described_class.run("eslint", "-")
     end
   end
 
-  context "absolute paths" do
+  context "with absolute paths" do
     before do
       allow(described_class).to receive(:base_path).and_return("/the/directory/")
     end
 
-    context "under us" do
+    context "when under us" do
       let(:path) { "/the/directory/jsapp/models/user.js" }
-      it "should be relativized" do
+
+      it "is relativized" do
         expect(draft).to receive(:add_comment).with(
           "jsapp/models/user.js",
           4,
@@ -59,9 +60,10 @@ RSpec.describe Gergich::Capture do
       end
     end
 
-    context "elsewhere" do
+    context "when elsewhere" do
       let(:path) { "/other/directory/jsapp/models/user.js" }
-      it "should not be relativized" do
+
+      it "is not relativized" do
         expect(draft).to receive(:add_comment).with(
           "/other/directory/jsapp/models/user.js",
           4,

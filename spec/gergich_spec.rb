@@ -3,10 +3,10 @@
 require "httparty"
 
 RSpec.describe Gergich::API do
-  context "bad change-id" do
+  context "with bad change-id" do
     let(:result) { double(:result, body: "Not Found: 1234") }
 
-    before :each do
+    before do
       allow(HTTParty).to receive(:send).and_return(result)
       allow(described_class).to receive(:prepare_options).and_return({})
     end
@@ -19,7 +19,7 @@ RSpec.describe Gergich::API do
     end
   end
 
-  context "GERGICH_DIGEST_AUTH exists" do
+  context "when GERGICH_DIGEST_AUTH exists" do
     it "uses digest auth" do
       original_basic_auth = ENV["GERGICH_DIGEST_AUTH"]
       ENV["GERGICH_DIGEST_AUTH"] = "1"
@@ -39,7 +39,7 @@ RSpec.describe Gergich::API do
     end
   end
 
-  context "GERGICH_DIGEST_AUTH does not exist" do
+  context "when GERGICH_DIGEST_AUTH does not exist" do
     it "uses basic auth" do
       original_basic_auth = ENV["GERGICH_DIGEST_AUTH"]
       ENV["GERGICH_DIGEST_AUTH"] = nil
@@ -57,11 +57,11 @@ RSpec.describe Gergich::API do
 end
 
 RSpec.describe Gergich::Commit do
-  before :each do
+  before do
     allow(Gergich).to receive(:use_git?).and_return(false)
   end
 
-  context "change_id works" do
+  describe "#change_id" do
     it "supports branches with slashes" do
       allow(ENV).to receive(:[]).with("GERRIT_PATCHSET_REVISION").and_return("commit-ish")
       allow(ENV).to receive(:[]).with("GERRIT_PROJECT").and_return("spec-project")
@@ -92,7 +92,7 @@ RSpec.describe Gergich::Draft do
     draft.reset!
   end
 
-  context "#GERGICH_DB_PATH" do
+  describe "#GERGICH_DB_PATH" do
     it "uses the custom path" do
       original_db_path = ENV["GERGICH_DB_PATH"]
       ENV["GERGICH_DB_PATH"] = "/custom"
@@ -136,6 +136,7 @@ RSpec.describe Gergich::Draft do
 
     describe "[:cover_message_parts]" do
       subject { super()[:cover_message_parts] }
+
       let(:message1) { "this is good" }
       let(:message2) { "loljk it's terrible" }
 
@@ -147,10 +148,10 @@ RSpec.describe Gergich::Draft do
         expect(subject).to include(message2)
       end
 
-      context "orphaned file comments exist" do
+      context "when orphaned file comments exist" do
         let(:orphaned_comment) { "fix invalid" }
 
-        before :each do
+        before do
           draft.add_comment "invalid.rb", 1, orphaned_comment, "info"
         end
 
@@ -260,20 +261,22 @@ RSpec.describe Gergich::Review do
   describe "#status" do
     subject { review.status }
 
-    context "nothing to publish" do
-      before :each do
+    context "with nothing to publish" do
+      before do
         allow(review).to receive(:anything_to_publish?).and_return(false)
       end
+
       it { expect { subject }.to output(include("Nothing to publish")).to_stdout }
     end
 
-    context "something to publish" do
-      before :each do
+    context "with something to publish" do
+      before do
         allow(review).to receive(:anything_to_publish?).and_return(true)
         allow(review).to receive(:already_commented?).and_return(false)
         allow(review).to receive(:generate_payload).and_return({})
         allow(review).to receive(:my_messages).and_return([])
       end
+
       it {
         expected_outputs = [
           "Project:",
@@ -289,8 +292,8 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#publish!" do
-    context "nothing to publish" do
-      before :each do
+    context "with nothing to publish" do
+      before do
         allow(review).to receive(:anything_to_publish?).and_return(false)
       end
 
@@ -301,8 +304,8 @@ RSpec.describe Gergich::Review do
       end
     end
 
-    context "something to publish" do
-      before :each do
+    context "with something to publish" do
+      before do
         allow(review).to receive(:anything_to_publish?).and_return(true)
         allow(review).to receive(:already_commented?).and_return(false)
         allow(review).to receive(:generate_payload).and_return({})
@@ -316,19 +319,19 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#anything_to_publish?" do
-    before :each do
+    before do
       allow(review).to receive(:current_label).and_return("BAHA")
       allow(review).to receive(:current_label_revision).and_return("Revision trash stuff")
     end
 
-    context "no comments exist" do
+    context "when no comments exist" do
       it "returns false" do
         allow(review).to receive(:new_score?).and_return(false)
         expect(review.anything_to_publish?).to eq false
       end
     end
 
-    context "comments exist" do
+    context "when comments exist" do
       it "returns true" do
         draft.info[:comments] = "Hello there this is a comment"
         expect(review.anything_to_publish?).to eq true
@@ -337,19 +340,19 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#new_score?" do
-    before :each do
+    before do
       allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
       allow(review).to receive(:current_score).and_return(0)
     end
 
-    context "score is the same" do
+    context "when score is the same" do
       it "returns false" do
         draft.info[:score] = 0
         expect(review.new_score?).to eq false
       end
     end
 
-    context "score is different" do
+    context "when score is different" do
       it "returns true" do
         draft.info[:score] = -1
         expect(review.new_score?).to eq true
@@ -358,8 +361,8 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#upcoming_score" do
-    context "current_label_is_for_current_revision? is true" do
-      it "Should return the min value of draft.info[:score] and current_score" do
+    context "when current_label_is_for_current_revision? is true" do
+      it "returns the min value of draft.info[:score] and current_score" do
         allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
         allow(review).to receive(:current_score).and_return(0)
         review.draft.info[:score] = 1
@@ -367,8 +370,8 @@ RSpec.describe Gergich::Review do
       end
     end
 
-    context "current_label_is_for_current_revision? is false" do
-      it "Should return the value of draft.info[:score]" do
+    context "when current_label_is_for_current_revision? is false" do
+      it "returns the value of draft.info[:score]" do
         allow(review).to receive(:current_label_is_for_current_revision?).and_return(false)
         review.draft.info[:score] = 1
         expect(review.upcoming_score).to eq 1
@@ -377,7 +380,7 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#cover_message" do
-    context "score is negative" do
+    context "when score is negative" do
       it "includes the Code-Review score if negative" do
         allow(review).to receive(:upcoming_score).and_return(-1)
         review.draft.add_label "Code-Review", -1
@@ -385,11 +388,11 @@ RSpec.describe Gergich::Review do
       end
     end
 
-    context "score is non-negative" do
+    context "when score is non-negative" do
       it "doesn't include the score if not negative" do
         allow(review).to receive(:upcoming_score).and_return(0)
         draft.add_label "Code-Review", 0
-        expect(subject).to_not match(/^0/)
+        expect(subject).not_to match(/^0/)
       end
     end
   end

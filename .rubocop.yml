@@ -1,3 +1,7 @@
+require:
+  - rubocop-rake
+  - rubocop-rspec
+
 AllCops:
   TargetRubyVersion: 2.5
   NewCops: enable
@@ -10,6 +14,23 @@ Layout/EndAlignment:
   EnforcedStyleAlignWith: variable
 
 Metrics:
+  Enabled: false
+
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/MessageSpies:
+  Enabled: false
+RSpec/MultipleDescribes:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+RSpec/NamedSubject:
+  Enabled: false
+RSpec/NestedGroups:
+  Enabled: false
+RSpec/VerifiedDoubles:
   Enabled: false
 
 Style/BlockDelimiters:
