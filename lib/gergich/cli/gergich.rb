@@ -18,6 +18,7 @@ CI_TEST_ARGS = {
     bin/gergich:47:8: C: Prefer double-quoted strings
     if ENV['DEBUG']
            ^^^^^^^
+    1 file inspected, 35 offenses detected, 27 offenses auto-correctable
   OUTPUT
 }.freeze
 

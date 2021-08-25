@@ -19,6 +19,8 @@ RSpec.describe Gergich::Capture::RubocopCapture do
       lib/gergich.rb:22:55: W: Line is too long. [55/54]
           def initialize(ref = "HEAD", revision_number = nil)
                                                            ^^
+
+      1 file inspected, 35 offenses detected, 27 offenses auto-correctable
     OUTPUT
   end
   let(:comments) do
@@ -63,4 +65,11 @@ RSpec.describe Gergich::Capture::RubocopCapture do
   end
 
   it_behaves_like "a captor"
+
+  it "raises an error if it couldn't run" do
+    expect { subject.run(<<-OUTPUT) }.to raise_error(/RuboCop failed to run properly/)
+      Could not find i18n-1.8.9 in any of the sources
+      Run `bundle install` to install missing gems.
+    OUTPUT
+  end
 end
