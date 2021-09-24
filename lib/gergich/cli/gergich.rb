@@ -41,7 +41,7 @@ def run_ci_test!(all_commands)
 
   commands.each do |command, args = []|
     arglist = args.map { |arg| Shellwords.escape(arg.to_s) }
-    output = `bin/gergich #{command} #{arglist.join(" ")} 2>&1`
+    output = `bundle exec gergich #{command} #{arglist.join(" ")} 2>&1`
     unless $CHILD_STATUS.success?
       error "`gergich citest` failed on step `#{command}`:\n\n#{output.gsub(/^/, '  ')}\n"
     end

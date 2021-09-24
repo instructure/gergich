@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "byebug"
 require "simplecov" if ENV["COVERAGE"]
 require_relative "../lib/gergich"
 

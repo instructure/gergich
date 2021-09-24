@@ -3,6 +3,8 @@
 require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::RubocopCapture do
+  subject(:captor) { described_class.new }
+
   let(:output) do
     <<~OUTPUT
       Offenses:
@@ -67,7 +69,7 @@ RSpec.describe Gergich::Capture::RubocopCapture do
   it_behaves_like "a captor"
 
   it "raises an error if it couldn't run" do
-    expect { subject.run(<<-OUTPUT) }.to raise_error(/RuboCop failed to run properly/)
+    expect { captor.run(<<-OUTPUT) }.to raise_error(/RuboCop failed to run properly/)
       Could not find i18n-1.8.9 in any of the sources
       Run `bundle install` to install missing gems.
     OUTPUT

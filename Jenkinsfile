@@ -37,6 +37,11 @@ pipeline {
                         sh 'docker-compose run --rm test /bin/bash -lc "rvm-exec 2.6 bin/run_tests.sh"'
                     }
                 }
+                stage('Ruby 2.7') {
+                    steps {
+                        sh 'docker-compose run --rm test /bin/bash -lc "rvm-exec 2.7 bin/run_tests.sh"'
+                    }
+                }
             }
 
             post {

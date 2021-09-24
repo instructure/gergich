@@ -6,7 +6,6 @@ module Gergich
       # stylelint is a css linter
       # https://github.com/stylelint/stylelint
       #
-      # rubocop:disable Style/AsciiComments
       # example full output:
       # app/stylesheets/base/_print.scss
       #  3:17  ✖  Unexpected invalid hex color "#owiehfi"   color-no-invalid-hex
@@ -31,7 +30,6 @@ module Gergich
       # example error line:
       #   1:15  ✖  Unexpected invalid hex color "#2D3B4"   color-no-invalid-hex
       ERROR_PATTERN = /^\s+(\d+):\d+\s+(✖|⚠|ℹ)\s+(.*?)\s\s+[^\n]+\n/.freeze
-      # rubocop:enable Style/AsciiComments
 
       PATTERN = /#{FILE_PATH_PATTERN}((#{ERROR_PATTERN})+)/.freeze
 

@@ -8,12 +8,14 @@ Gem::Specification.new do |s|
                             "Gerrit so you can get nice inline comments right on the review"
   s.authors               = ["Jon Jensen"]
   s.email                 = "jon@instructure.com"
-  s.executables           = %w[gergich master_bouncer]
-  s.files                 = ["LICENSE", "README.md"] + Dir["**/*.rb"] + Dir["bin/*"]
   s.homepage              = "https://github.com/instructure/gergich"
   s.license               = "MIT"
 
-  s.required_ruby_version = ">= 2.5.0"
+  s.required_ruby_version = ">= 2.5"
+
+  s.bindir = "exe"
+  s.executables = %w[gergich master_bouncer]
+  s.files = Dir["{exe,lib}/**/*"]
 
   s.add_dependency "httparty", "~> 0.17"
   s.add_dependency "sqlite3", "~> 1.4"
@@ -21,8 +23,8 @@ Gem::Specification.new do |s|
   s.add_development_dependency "byebug", "~> 11.1"
   s.add_development_dependency "rake", "~> 13.0"
   s.add_development_dependency "rspec", "~> 3.9"
-  s.add_development_dependency "rubocop", "~> 1.19.1"
+  s.add_development_dependency "rubocop", "~> 1.21"
   s.add_development_dependency "rubocop-rake", "~> 0.6"
-  s.add_development_dependency "rubocop-rspec", "~> 2.4"
+  s.add_development_dependency "rubocop-rspec", "~> 2.5"
   s.add_development_dependency "simplecov", "~> 0.21.2"
 end

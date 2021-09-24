@@ -2,9 +2,9 @@
 
 require "httparty"
 
-RSpec.describe Gergich::API do
+RSpec.describe Gergich::API do # rubocop:todo RSpec/MultipleDescribes yes, this file _should_ be broken up
   context "with bad change-id" do
-    let(:result) { double(:result, body: "Not Found: 1234") }
+    let(:result) { instance_double("HTTParty::Response", body: "Not Found: 1234") }
 
     before do
       allow(HTTParty).to receive(:send).and_return(result)
@@ -76,8 +76,8 @@ end
 
 RSpec.describe Gergich::Draft do
   let!(:draft) do
-    commit = double(
-      :commit,
+    commit = instance_double(
+      "Commit",
       files: [
         "foo.rb",
         "bar/baz.lol"
@@ -108,34 +108,34 @@ RSpec.describe Gergich::Draft do
   end
 
   describe "#info" do
-    subject { draft.info }
+    subject(:info) { draft.info }
 
     describe "[:comments]" do
-      subject { super()[:comments] }
+      subject(:comments) { info[:comments] }
 
       it "includes file comments" do
         draft.add_comment "foo.rb", 1, "fix foo", "info"
-        expect(subject).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
+        expect(comments).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
       end
 
       it "strips whitespace from filename" do
         draft.add_comment " foo.rb\n", 1, "fix foo", "info"
-        expect(subject).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
+        expect(comments).to eq("foo.rb" => [{ line: 1, message: "[INFO] fix foo" }])
       end
 
       it "includes COMMIT_MSG comments" do
         draft.add_comment "/COMMIT_MSG", 1, "fix commit", "info"
-        expect(subject).to eq("/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }])
+        expect(comments).to eq("/COMMIT_MSG" => [{ line: 1, message: "[INFO] fix commit" }])
       end
 
       it "doesn't include orphaned file comments" do
         draft.add_comment "invalid.rb", 1, "fix invalid", "info"
-        expect(subject).to eq({})
+        expect(comments).to eq({})
       end
     end
 
     describe "[:cover_message_parts]" do
-      subject { super()[:cover_message_parts] }
+      subject(:cover_message_parts) { info[:cover_message_parts] }
 
       let(:message1) { "this is good" }
       let(:message2) { "loljk it's terrible" }
@@ -144,8 +144,8 @@ RSpec.describe Gergich::Draft do
         draft.add_message message1
         draft.add_message message2
 
-        expect(subject).to include(message1)
-        expect(subject).to include(message2)
+        expect(cover_message_parts).to include(message1)
+        expect(cover_message_parts).to include(message2)
       end
 
       context "when orphaned file comments exist" do
@@ -156,23 +156,23 @@ RSpec.describe Gergich::Draft do
         end
 
         it "includes orphan file message" do
-          expect(subject.first).to match(/#{orphaned_comment}/)
+          expect(cover_message_parts.first).to match(/#{orphaned_comment}/)
         end
       end
     end
 
     describe "[:total_comments]" do
-      subject { super()[:total_comments] }
+      subject(:total_comments) { info[:total_comments] }
 
       it "includes inline and orphaned comments" do
         draft.add_comment "foo.rb", 1, "fix foo", "info"
         draft.add_comment "invalid.rb", 1, "fix invalid", "info"
-        expect(subject).to eq 2
+        expect(total_comments).to eq 2
       end
     end
 
     describe "[:labels]" do
-      subject { super()[:labels] }
+      subject(:labels) { info[:labels] }
 
       it "uses the lowest score for each label" do
         draft.add_label "QA-Review", 1
@@ -180,7 +180,7 @@ RSpec.describe Gergich::Draft do
         draft.add_label "Code-Review", -2
         draft.add_label "Code-Review", 1
 
-        expect(subject).to eq(
+        expect(labels).to eq(
           "QA-Review" => -1,
           "Code-Review" => -2
         )
@@ -195,10 +195,10 @@ RSpec.describe Gergich::Draft do
       end
 
       describe "[\"Code-Review\"]" do
-        subject { super()["Code-Review"] }
+        subject(:code_review) { labels["Code-Review"] }
 
         it "defaults to zero" do
-          expect(subject).to eq(0)
+          expect(code_review).to eq(0)
         end
 
         it "is the lowest comment severity if not set" do
@@ -206,28 +206,28 @@ RSpec.describe Gergich::Draft do
           draft.add_comment "foo.rb", 2, "fix foo", "error"
           draft.add_comment "foo.rb", 3, "fix foo", "warn"
 
-          expect(subject).to eq(-2)
+          expect(code_review).to eq(-2)
         end
 
         it "is trumped by a lower comment severity if negative" do
           draft.add_label "Code-Review", 1
           draft.add_comment "foo.rb", 1, "fix foo", "warn"
 
-          expect(subject).to eq(-1)
+          expect(code_review).to eq(-1)
         end
 
         it "is not trumped by a lower comment severity if zero" do
           draft.add_label "Code-Review", 1
           draft.add_comment "foo.rb", 1, "this is ok", "info"
 
-          expect(subject).to eq(1)
+          expect(code_review).to eq(1)
         end
 
         it "is not trumped by a higher comment severity" do
           draft.add_label "Code-Review", -1
           draft.add_comment "foo.rb", 1, "this is ok", "info"
 
-          expect(subject).to eq(-1)
+          expect(code_review).to eq(-1)
         end
       end
     end
@@ -237,8 +237,8 @@ end
 RSpec.describe Gergich::Review do
   let(:change_id) { "test" }
   let!(:commit) do
-    double(
-      :commit,
+    instance_double(
+      "Commit",
       change_id: change_id,
       files: [
         "foo.rb",
@@ -259,14 +259,14 @@ RSpec.describe Gergich::Review do
   end
 
   describe "#status" do
-    subject { review.status }
+    subject(:status) { review.status }
 
     context "with nothing to publish" do
       before do
         allow(review).to receive(:anything_to_publish?).and_return(false)
       end
 
-      it { expect { subject }.to output(include("Nothing to publish")).to_stdout }
+      it { expect { status }.to output(include("Nothing to publish")).to_stdout }
     end
 
     context "with something to publish" do
@@ -286,7 +286,7 @@ RSpec.describe Gergich::Review do
           "Files:"
           # There's more... but this is good
         ]
-        expect { subject }.to output(include(*expected_outputs)).to_stdout
+        expect { status }.to output(include(*expected_outputs)).to_stdout
       }
     end
   end
@@ -392,7 +392,7 @@ RSpec.describe Gergich::Review do
       it "doesn't include the score if not negative" do
         allow(review).to receive(:upcoming_score).and_return(0)
         draft.add_label "Code-Review", 0
-        expect(subject).not_to match(/^0/)
+        expect(review).not_to match(/^0/)
       end
     end
   end

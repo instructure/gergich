@@ -2,16 +2,16 @@
 
 require_relative "../../../lib/gergich/capture"
 
-class CustomCaptor
-  def run(output)
-    output.scan(/^(.+?):(\d+): (.*)$/).map do |file, line, error|
-      { path: file, message: error, position: line.to_i, severity: "error" }
+RSpec.describe "CustomCaptor" do
+  let(:described_class) do
+    Class.new do
+      def run(output)
+        output.scan(/^(.+?):(\d+): (.*)$/).map do |file, line, error|
+          { path: file, message: error, position: line.to_i, severity: "error" }
+        end
+      end
     end
   end
-end
-
-RSpec.describe "CustomCaptor" do
-  let(:described_class) { CustomCaptor }
   let(:capture_format) { "custom:sqlite3:CustomCaptor" }
   let(:output) do
     <<~OUTPUT
@@ -29,13 +29,17 @@ RSpec.describe "CustomCaptor" do
     ]
   end
 
+  before do
+    allow(Gergich::Capture).to receive(:const_get).with("CustomCaptor").and_return(described_class)
+  end
+
   it "loads" do
     captor = Gergich::Capture.load_captor(capture_format)
     expect(captor).to eq(described_class)
   end
 
   it "catches errors" do
-    comments = subject.run(output)
+    comments = described_class.new.run(output)
     expect(comments).to match_array(comments)
   end
 end

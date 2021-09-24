@@ -228,7 +228,7 @@ module Gergich
     end
 
     def current_score
-      current_label && current_label["value"] || 0
+      (current_label && current_label["value"]) || 0
     end
 
     def cover_message
@@ -310,7 +310,7 @@ module Gergich
       def base_uri
         @base_uri ||= \
           ENV["GERRIT_BASE_URL"] ||
-          ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}" ||
+          (ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}") ||
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
