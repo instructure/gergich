@@ -51,13 +51,29 @@ module Gergich
           if /(?<context>[^\n]+\n *\^+\n)/m =~ message
             message.sub!(context, "\n#{context.gsub(/^/, ' ')}")
           end
+          match = message.match(
+            %r{
+              \A
+              (?<corrected>\[Corrected\]\s)?
+              (?<correctable>\[Correctable\]\s)?
+              (?:(?<cop>[A-Za-z/]+):\s)?
+              (?<message>.*)
+              \z
+              }mx
+          )
 
+          # rubocop:disable Style/DoubleNegation
           messages << {
             path: file,
             position: line.to_i,
-            message: "[rubocop] #{message}",
-            severity: SEVERITY_MAP[severity]
+            message: match[:message],
+            rule: match[:cop],
+            corrected: !!match[:corrected],
+            correctable: !!match[:correctable],
+            severity: SEVERITY_MAP[severity],
+            source: "rubocop"
           }
+          # rubocop:enable Style/DoubleNegation
         end
 
         messages

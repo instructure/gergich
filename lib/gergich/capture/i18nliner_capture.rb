@@ -16,7 +16,7 @@ module Gergich
             line = Regexp.last_match[1]
             ""
           end
-          { path: file, message: "[i18n] #{error}", position: line.to_i, severity: "error" }
+          { path: file, message: error, source: "i18n", position: line.to_i, severity: "error" }
         }.compact
       end
     end

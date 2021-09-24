@@ -16,7 +16,8 @@ module Gergich
         output.scan(pattern).map { |file, errors|
           errors.scan(error_pattern).map { |line, severity, error|
             severity = SEVERITY_MAP[severity]
-            { path: file, message: "[eslint] #{error}", position: line.to_i, severity: severity }
+            { path: file, message: error, source: "eslint", position: line.to_i,
+              severity: severity }
           }
         }.compact.flatten
       end

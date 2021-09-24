@@ -16,7 +16,13 @@ module Gergich
         output.scan(pattern).map { |file, errors|
           errors.scan(error_pattern).map { |line, severity, error|
             severity = SEVERITY_MAP[severity]
-            { path: file, message: "[yamllint] #{error}", position: line.to_i, severity: severity }
+            {
+              path: file,
+              message: error,
+              source: "yamllint",
+              position: line.to_i,
+              severity: severity
+            }
           }
         }.compact.flatten
       end

@@ -39,8 +39,14 @@ module Gergich
           comments.each do |comment|
             next if skip_paths.any? { |path| comment[:path].start_with?(path) }
 
-            draft.add_comment comment[:path], comment[:position],
-                              comment[:message], comment[:severity]
+            message = +"[#{comment[:source]}] "
+            message << "#{comment[:rule]}: " if comment[:rule]
+            message << comment[:message]
+
+            draft.add_comment comment[:path],
+                              comment[:position],
+                              message,
+                              comment[:severity]
           end
         end
 

@@ -20,32 +20,37 @@ RSpec.describe Gergich::Capture::StylelintCapture do
       {
         path: "app/stylesheets/base/_print.scss",
         position: 3,
-        message: "[stylelint] Unexpected invalid hex color \"#owiehfi\"",
-        severity: "error"
+        message: "Unexpected invalid hex color \"#owiehfi\"",
+        severity: "error",
+        source: "stylelint"
       },
       {
         path: "app/stylesheets/base/_print.scss",
         position: 3,
-        message: "[stylelint] Expected \"#owiehfi\" to be \"#OWIEHFI\"",
-        severity: "warn"
+        message: "Expected \"#owiehfi\" to be \"#OWIEHFI\"",
+        severity: "warn",
+        source: "stylelint"
       },
       {
         path: "app/stylesheets/base/_variables.scss",
         position: 2,
-        message: "[stylelint] Unexpected invalid hex color \"#2D3B4\"",
-        severity: "error"
+        message: "Unexpected invalid hex color \"#2D3B4\"",
+        severity: "error",
+        source: "stylelint"
       },
       {
         path: "app/stylesheets/base/_variables.scss",
         position: 30,
-        message: "[stylelint] Expected \"#2d3b4a\" to be \"#2D3B4A\"",
-        severity: "warn"
+        message: "Expected \"#2d3b4a\" to be \"#2D3B4A\"",
+        severity: "warn",
+        source: "stylelint"
       },
       {
         path: "app/stylesheets/base/_variables.scss",
         position: 45,
-        message: "[stylelint] Expected \"#2d3b4a\" to be \"#2D3B4A\"",
-        severity: "info"
+        message: "Expected \"#2d3b4a\" to be \"#2D3B4A\"",
+        severity: "info",
+        source: "stylelint"
       }
     ]
   end

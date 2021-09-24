@@ -13,8 +13,9 @@ RSpec.describe Gergich::Capture::Flake8Capture do
       {
         path: "./djangogeneric/settings/base.py",
         position: 73,
-        message: "[flake8] E501 line too long (81 > 79 characters)",
-        severity: "error"
+        message: "E501 line too long (81 > 79 characters)",
+        severity: "error",
+        source: "flake8"
       }
     ]
   end

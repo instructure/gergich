@@ -9,7 +9,7 @@ RSpec.describe Gergich::Capture::RubocopCapture do
     <<~OUTPUT
       Offenses:
 
-      bin/gergich:47:8: C: Prefer double-quoted strings
+      bin/gergich:47:8: C: Style/StringLiteral: Prefer double-quoted strings
       if ENV['DEBUG']
              ^^^^^^^
       foo/bar/baz.rb:1:2: W: no context for this one :shrug:
@@ -18,9 +18,15 @@ RSpec.describe Gergich::Capture::RubocopCapture do
       seriously, what were you thinking?
           def foo
               ^^^
-      lib/gergich.rb:22:55: W: Line is too long. [55/54]
+      lib/gergich.rb:22:55: W: Layout/LineLength: Line is too long. [55/54]
           def initialize(ref = "HEAD", revision_number = nil)
                                                            ^^
+      script/rlint:49:5: E: [Correctable] Layout/IndentationConsistency: Inconsistent indentation detected.
+          require 'pp'
+          ^^^^^^^^^^^^
+      script/rlint:49:5: E: [Corrected] Layout/IndentationConsistency: Inconsistent indentation detected.
+          require 'pp'
+          ^^^^^^^^^^^^
 
       1 file inspected, 35 offenses detected, 27 offenses auto-correctable
     OUTPUT
@@ -30,38 +36,74 @@ RSpec.describe Gergich::Capture::RubocopCapture do
       {
         path: "bin/gergich",
         position: 47,
-        message: "[rubocop] Prefer double-quoted strings\n\n if ENV['DEBUG']\n        ^^^^^^^\n",
-        severity: "info"
+        message: "Prefer double-quoted strings\n\n if ENV['DEBUG']\n        ^^^^^^^\n",
+        severity: "info",
+        correctable: false,
+        corrected: false,
+        rule: "Style/StringLiteral",
+        source: "rubocop"
       },
       {
         path: "foo/bar/baz.rb",
         position: 1,
-        message: "[rubocop] no context for this one :shrug:\n",
-        severity: "warn"
+        message: "no context for this one :shrug:\n",
+        severity: "warn",
+        correctable: false,
+        corrected: false,
+        rule: nil,
+        source: "rubocop"
       },
       {
         path: "lib/gergich.rb",
         position: 10,
         message: <<~OUTPUT,
-          [rubocop] this is a terrible name
+          this is a terrible name
 
           seriously, what were you thinking?
 
                def foo
                    ^^^
         OUTPUT
-        severity: "error"
+        severity: "error",
+        correctable: false,
+        corrected: false,
+        rule: nil,
+        source: "rubocop"
       },
       {
         path: "lib/gergich.rb",
         position: 22,
         message: <<~OUTPUT,
-          [rubocop] Line is too long. [55/54]
+          Line is too long. [55/54]
 
                def initialize(ref = "HEAD", revision_number = nil)
                                                                 ^^
         OUTPUT
-        severity: "warn"
+        severity: "warn",
+        correctable: false,
+        corrected: false,
+        rule: "Layout/LineLength",
+        source: "rubocop"
+      },
+      {
+        path: "script/rlint",
+        position: 49,
+        message: "Inconsistent indentation detected.\n\n     require 'pp'\n     ^^^^^^^^^^^^\n",
+        rule: "Layout/IndentationConsistency",
+        corrected: false,
+        correctable: true,
+        severity: "error",
+        source: "rubocop"
+      },
+      {
+        path: "script/rlint",
+        position: 49,
+        message: "Inconsistent indentation detected.\n\n     require 'pp'\n     ^^^^^^^^^^^^\n",
+        rule: "Layout/IndentationConsistency",
+        corrected: true,
+        correctable: false,
+        severity: "error",
+        source: "rubocop"
       }
     ]
   end

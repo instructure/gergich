@@ -35,8 +35,13 @@ module Gergich
 
         output.scan(pattern).map { |file, line, severity, error, context|
           context = "\n\n#{context}" if context
-          { path: file, message: "[androidlint] #{error}#{context}".strip,
-            position: (line || 0).to_i, severity: SEVERITY_MAP[severity] }
+          {
+            path: file,
+            message: "#{error}#{context}".strip,
+            position: (line || 0).to_i,
+            severity: SEVERITY_MAP[severity],
+            source: "androidlint"
+          }
         }.compact
       end
     end

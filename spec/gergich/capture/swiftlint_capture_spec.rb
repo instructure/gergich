@@ -20,20 +20,23 @@ RSpec.describe Gergich::Capture::SwiftlintCapture do
       {
         path: "/path/to/My.swift",
         position: 13,
-        message: "[swiftlint] #{colon_violation}",
-        severity: "warn"
+        message: colon_violation,
+        severity: "warn",
+        source: "swiftlint"
       },
       {
         path: "/path/to/Fail.swift",
         position: 76,
-        message: "[swiftlint] #{line_length_violation}",
-        severity: "warn"
+        message: line_length_violation.to_s,
+        severity: "warn",
+        source: "swiftlint"
       },
       {
         path: "/path/to/Cast.swift",
         position: 15,
-        message: "[swiftlint] #{force_cast_violation}",
-        severity: "error"
+        message: force_cast_violation.to_s,
+        severity: "error",
+        source: "swiftlint"
       }
     ]
   end

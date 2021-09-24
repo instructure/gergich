@@ -32,27 +32,31 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
         path: "/path/to/some.xml",
         position: 27,
         # rubocop:disable Layout/LineLength
-        message: "[androidlint] #{rtl_hardcoded}\n\n    android:drawableLeft=\"@drawable/ic_cv_media\"/>\n    ~~~~~~~~~~~~~~~~~~~~",
+        message: "#{rtl_hardcoded}\n\n    android:drawableLeft=\"@drawable/ic_cv_media\"/>\n    ~~~~~~~~~~~~~~~~~~~~",
         # rubocop:enable Layout/LineLength
-        severity: "warn"
+        severity: "warn",
+        source: "androidlint"
       },
       {
         path: "/path/to/AndroidManifest.xml",
         position: 0,
-        message: "[androidlint] #{rtl_enabled}",
-        severity: "warn"
+        message: rtl_enabled.to_s,
+        severity: "warn",
+        source: "androidlint"
       },
       {
         path: "/path/to/library/0.0.2",
         position: 0,
-        message: "[androidlint] #{lint_error}",
-        severity: "error"
+        message: lint_error.to_s,
+        severity: "error",
+        source: "androidlint"
       },
       {
         path: "/path/to/values.xml",
         position: 5,
-        message: "[androidlint] #{unused_quantity}\n\n    <plurals name=\"number\">\n    ^",
-        severity: "warn"
+        message: "#{unused_quantity}\n\n    <plurals name=\"number\">\n    ^",
+        severity: "warn",
+        source: "androidlint"
       }
     ]
   end

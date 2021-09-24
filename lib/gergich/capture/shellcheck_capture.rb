@@ -20,7 +20,8 @@ module Gergich
             path: warning.fetch("file"),
             position: warning.fetch("line"),
             message: warning.fetch("message"),
-            severity: SEVERITY_MAP.fetch(severity)
+            severity: SEVERITY_MAP.fetch(severity),
+            source: "shellcheck"
           }
         end
       end

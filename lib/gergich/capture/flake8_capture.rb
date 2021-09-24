@@ -11,7 +11,7 @@ module Gergich
         /mx
 
         output.scan(pattern).map { |file, line, error|
-          { path: file, message: "[flake8] #{error}",
+          { path: file, message: error, source: "flake8",
             position: line.to_i, severity: "error" }
         }.compact
       end

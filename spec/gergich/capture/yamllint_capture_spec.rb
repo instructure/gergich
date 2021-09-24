@@ -15,14 +15,16 @@ RSpec.describe Gergich::Capture::YamllintCapture do
       {
         path: "api/config/lti/development/config.yml",
         position: 2,
-        message: "[yamllint] string value is redundantly quoted with double quotes",
-        severity: "error"
+        message: "string value is redundantly quoted with double quotes",
+        severity: "error",
+        source: "yamllint"
       },
       {
         path: "api/config/lti/development/config.yml",
         position: 12,
-        message: "[yamllint] comment not indented like content",
-        severity: "warn"
+        message: "comment not indented like content",
+        severity: "warn",
+        source: "yamllint"
       }
     ]
   end

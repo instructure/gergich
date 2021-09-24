@@ -56,25 +56,29 @@ RSpec.describe Gergich::Capture::ShellcheckCapture do
         path: "bin/sync-translations.sh",
         position: 23,
         message: "Use $(..) instead of legacy `..`.",
-        severity: "info"
+        severity: "info",
+        source: "shellcheck"
       },
       {
         path: "bin/sync-translations.sh",
         position: 23,
         message: "Quote this to prevent word splitting.",
-        severity: "warn"
+        severity: "warn",
+        source: "shellcheck"
       },
       {
         path: "bin/sync-translations.sh",
         position: 32,
         message: "Double quote to prevent globbing and word splitting.",
-        severity: "info"
+        severity: "info",
+        source: "shellcheck"
       },
       {
         path: "fail.sh",
         position: 3,
         message: "Delete trailing spaces after \\ to break line (or use quotes for literal space).",
-        severity: "error"
+        severity: "error",
+        source: "shellcheck"
       }
     ]
   end

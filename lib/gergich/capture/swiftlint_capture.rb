@@ -24,7 +24,7 @@ module Gergich
         /mx
 
         output.scan(pattern).map { |file, line, severity, error, _context|
-          { path: file, message: "[swiftlint] #{error}",
+          { path: file, message: error, source: "swiftlint",
             position: line.to_i, severity: SEVERITY_MAP[severity] }
         }.compact
       end

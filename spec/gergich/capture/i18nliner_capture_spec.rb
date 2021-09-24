@@ -15,8 +15,9 @@ RSpec.describe Gergich::Capture::I18nlinerCapture do
       {
         path: "jsapp/models/user.js",
         position: 4,
-        message: "[i18n] invalid signature: <unsupported expression>",
-        severity: "error"
+        message: "invalid signature: <unsupported expression>",
+        severity: "error",
+        source: "i18n"
       }
     ]
   end

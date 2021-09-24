@@ -15,14 +15,16 @@ RSpec.describe Gergich::Capture::EslintCapture do
       {
         path: "jsapp/models/user.js",
         position: 4,
-        message: "[eslint] Missing semicolon",
-        severity: "error"
+        message: "Missing semicolon",
+        severity: "error",
+        source: "eslint"
       },
       {
         path: "jsapp/models/user.js",
         position: 5,
-        message: "[eslint] Too much cowbell",
-        severity: "warn"
+        message: "Too much cowbell",
+        severity: "warn",
+        source: "eslint"
       }
     ]
   end
