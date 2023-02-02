@@ -9,7 +9,9 @@ CI_TEST_ARGS = {
       { path: "foo.rb", position: 3, severity: "error", message: "ಠ_ಠ" },
       { path: "/COMMIT_MSG", position: 1, severity: "info", message: "cool story bro" },
       { path: "/COMMIT_MSG", severity: "info", message: "lol",
-        position: { start_line: 1, start_character: 1, end_line: 1, end_character: 2 } }
+        position: { start_line: 1, start_character: 1, end_line: 1, end_character: 2 } },
+      { path: "/COMMIT_MSG", severity: "info", message: "more",
+        position: { start_line: 1, start_character: 5, end_line: 1, end_character: 5 } }
     ].to_json
   ],
   "label" => ["Code-Review", 1],
@@ -210,6 +212,7 @@ commands["capture"] = {
                         * i18nliner
                         * flake8
                         * stylelint
+                        * tsc
                         * yamllint
                         * custom:<path>:<class_name> - file path and ruby
                           class_name of a custom formatter.

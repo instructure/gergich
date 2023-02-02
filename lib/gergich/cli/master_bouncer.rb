@@ -17,7 +17,6 @@ def potentially_mergeable_changes
   url = "/changes/?q=status:open+" \
         "p:#{PROJECT}+" \
         "label:Verified=1+" \
-        "is:mergeable+" \
         "branch:master" \
         "&o=CURRENT_REVISION"
   changes = Gergich::API.get(url)

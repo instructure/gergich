@@ -27,14 +27,9 @@ pipeline {
 
         stage('Test') {
             parallel {
-                stage('Ruby 2.5') {
-                    steps {
-                        sh 'docker-compose run --name coverage test /bin/bash -lc "rvm-exec 2.5 bin/run_tests.sh"'
-                    }
-                }
                 stage('Ruby 2.6') {
                     steps {
-                        sh 'docker-compose run --rm test /bin/bash -lc "rvm-exec 2.6 bin/run_tests.sh"'
+                        sh 'docker-compose run --name coverage test /bin/bash -lc "rvm-exec 2.6 bin/run_tests.sh"'
                     }
                 }
                 stage('Ruby 2.7') {

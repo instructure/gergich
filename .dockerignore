@@ -3,6 +3,5 @@
 /coverage
 /docker-compose.yml
 /Dockerfile
-/Gemfile.lock
 /Jenkinsfile
 /**/*.gem
