@@ -16,9 +16,9 @@ RSpec.describe Gergich::Capture::TscCapture do
         path: "bad.ts",
         position: {
           start_line: 2,
-          start_position: 3,
+          start_character: 3,
           end_line: 2,
-          end_position: 3
+          end_character: 3
         },
         message: "Argument of type 'number' is not assignable to parameter of type 'string'.",
         severity: "error",
@@ -29,9 +29,9 @@ RSpec.describe Gergich::Capture::TscCapture do
         path: "bad.ts",
         position: {
           start_line: 4,
-          start_position: 10,
+          start_character: 10,
           end_line: 4,
-          end_position: 10
+          end_character: 10
         },
         message: "Argument of type 'string' is not assignable to parameter of type 'number'.\n" \
                  "  Some extra info on this error",

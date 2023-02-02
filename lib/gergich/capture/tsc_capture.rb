@@ -14,9 +14,9 @@ module Gergich
             rule: code,
             position: {
               start_line: line.to_i,
-              start_position: pos.to_i,
+              start_character: pos.to_i,
               end_line: line.to_i,
-              end_position: pos.to_i
+              end_character: pos.to_i
             },
             severity: severity
           }

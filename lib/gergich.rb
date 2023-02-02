@@ -459,7 +459,7 @@ module Gergich
       (
         position.is_a?(Integer) && position >= 0
       ) || (
-        position.is_a?(Hash) && position.keys.sort == POSITION_KEYS &&
+        position.is_a?(Hash) && position.keys.map(&:to_s).sort == POSITION_KEYS &&
         position.values.all? { |v| v.is_a?(Integer) && v >= 0 }
       )
     end
