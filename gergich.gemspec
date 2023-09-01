@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name                  = "gergich"
-  s.version               = "2.1.1"
+  s.version               = "2.1.2"
   s.summary               = "Command-line tool for adding Gerrit comments"
   s.description           = "Gergich is a little command-line tool for wiring up linters to " \
                             "Gerrit so you can get nice inline comments right on the review"

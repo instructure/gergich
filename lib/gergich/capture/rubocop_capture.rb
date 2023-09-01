@@ -4,6 +4,7 @@ module Gergich
   module Capture
     class RubocopCapture < BaseCapture
       SEVERITY_MAP = {
+        "I" => "info",  # info
         "R" => "info",  # refactor
         "C" => "info",  # convention
         "W" => "warn",  # warning
