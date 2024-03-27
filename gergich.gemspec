@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name                  = "gergich"
-  s.version               = "2.1.2"
+  s.version               = "2.1.3"
   s.summary               = "Command-line tool for adding Gerrit comments"
   s.description           = "Gergich is a little command-line tool for wiring up linters to " \
                             "Gerrit so you can get nice inline comments right on the review"
@@ -11,14 +11,14 @@ Gem::Specification.new do |s|
   s.homepage              = "https://github.com/instructure/gergich"
   s.license               = "MIT"
 
-  s.required_ruby_version = ">= 2.5"
+  s.required_ruby_version = ">= 2.6"
 
   s.bindir = "exe"
   s.executables = %w[gergich master_bouncer]
   s.files = Dir["{exe,lib}/**/*"]
 
   s.add_dependency "httparty", "~> 0.17"
-  s.add_dependency "sqlite3", "~> 1.4"
+  s.add_dependency "sqlite3", "~> 1.5.0"
 
   s.add_development_dependency "byebug", "~> 11.1"
   s.add_development_dependency "rake", "~> 13.0"
