@@ -9,6 +9,9 @@ MASTER_BOUNCER_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 require_relative "../../gergich"
 
 PROJECT = ENV["GERRIT_PROJECT"] || error("no GERRIT_PROJECT set")
+# on Jenkins GERRIT_MAIN_BRANCH env var will default to empty string if not set
+MAIN_BRANCH = ENV["GERRIT_MAIN_BRANCH"].nil? || ENV["GERRIT_MAIN_BRANCH"].empty? ? "master" :
+        ENV["GERRIT_MAIN_BRANCH"]
 # TODO: time-based thresholds
 WARN_DISTANCE = ENV.fetch("MASTER_BOUNCER_WARN_DISTANCE", 50).to_i
 ERROR_DISTANCE = ENV.fetch("MASTER_BOUNCER_ERROR_DISTANCE", 100).to_i
@@ -17,7 +20,7 @@ def potentially_mergeable_changes
   url = "/changes/?q=status:open+" \
         "p:#{PROJECT}+" \
         "label:Verified=1+" \
-        "branch:master" \
+        "branch:#{MAIN_BRANCH}" \
         "&o=CURRENT_REVISION"
   changes = Gergich::API.get(url)
   changes.reject { |c| c["subject"] =~ /\Awip($|\W)/i }
@@ -27,8 +30,8 @@ def maybe_bounce_commit!(commit)
   draft = Gergich::Draft.new(commit)
   draft.reset!
 
-  distance = Gergich.git("rev-list origin/master ^#{commit.ref} --count").to_i
-  detail = "#{distance} commits behind master"
+  distance = Gergich.git("rev-list origin/#{MAIN_BRANCH} ^#{commit.ref} --count").to_i
+  detail = "#{distance} commits behind #{MAIN_BRANCH}"
 
   score = 0
   message = nil

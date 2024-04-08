@@ -1,8 +1,14 @@
+# syntax=docker/dockerfile:1.0.0-experimental
 FROM instructure/rvm
 
 ENV LANG C.UTF-8
+ENV GIT_SSH_COMMAND='ssh -i "$SSH_KEY_PATH" -l $SSH_USER_NAME -o StrictHostKeyChecking=no'
 
 USER root
+
+ARG USER_ID
+RUN if [ -n "$USER_ID" ]; then usermod -u "${USER_ID}" docker \
+        && find / -xdev -user ${USER_ID} -exec chown -h docker {} \; ; fi
 
 RUN apt-get update \
   && apt-get install -y \

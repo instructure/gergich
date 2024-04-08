@@ -102,7 +102,7 @@ module Gergich
   class Review
     attr_reader :commit, :draft
 
-    def initialize(commit = Commit.new, draft = Draft.new)
+    def initialize(commit = Commit.new, draft = Draft.new(commit))
       @commit = commit
       @draft = draft
     end

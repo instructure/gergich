@@ -1,12 +1,14 @@
-version: '3.4'
+version: '3.8'
 
 services:
   test:
-    build: .
+    build:
+      context: .
     environment:
       GERGICH_KEY: "${GERGICH_KEY}"
       GERRIT_CHANGE_ID: "${GERRIT_CHANGE_ID}"
       GERRIT_HOST: "${GERRIT_HOST}"
+      GERRIT_MAIN_BRANCH: "${GERRIT_MAIN_BRANCH}"
       GERRIT_PATCHSET_REVISION: "${GERRIT_PATCHSET_REVISION}"
       GERRIT_PROJECT: "${GERRIT_PROJECT}"
       MASTER_BOUNCER_KEY: "${MASTER_BOUNCER_KEY}"

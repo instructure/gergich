@@ -92,7 +92,8 @@ commands["publish"] = {
 commands["status"] = {
   summary: "Show the current draft for this patchset",
   action: -> {
-    Gergich::Review.new.status
+    commit = Gergich::Commit.new
+    Gergich::Review.new(commit).status
   },
   help: -> {
     <<~TEXT
