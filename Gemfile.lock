@@ -1,9 +1,9 @@
 PATH
   remote: .
   specs:
-    gergich (2.1.4)
+    gergich (2.1.5)
       httparty (~> 0.17)
-      sqlite3 (~> 1.4)
+      sqlite3 (>= 1.4, < 3.0)
 
 GEM
   remote: https://rubygems.org/
