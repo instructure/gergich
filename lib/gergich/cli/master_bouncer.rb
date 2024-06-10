@@ -84,10 +84,18 @@ commands["check"] = {
 commands["check_all"] = {
   summary: "Check the age of all potentially mergeable changes",
   action: -> {
-    Gergich.git("fetch")
     gerrit_host = ENV["GERRIT_HOST"] || error("No GERRIT_HOST set")
+    Gergich.git("fetch")
 
     changes = potentially_mergeable_changes
+    # if changes is empty or nil, we don't need to iterate over it
+    # log that we're skipping, and return
+    if changes.nil? || changes.empty?
+      Logging.logger.info "No changes to check"
+      return
+    end
+    Logging.logger.info "Checking #{changes.size} changes"
+
     next if ENV["DRY_RUN"]
 
     changes.each do |change|

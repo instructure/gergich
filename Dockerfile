@@ -2,6 +2,14 @@ FROM instructure/rvm
 
 ENV LANG C.UTF-8
 
+USER root
+
+RUN apt-get update \
+  && apt-get install -y \
+  git
+
+USER docker
+
 COPY --chown=docker:docker Gemfile Gemfile.lock gergich.gemspec /usr/src/app/
 COPY --chown=docker:docker exe/* /usr/src/app/exe/
 RUN mkdir -p coverage

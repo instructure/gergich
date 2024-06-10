@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 bundle exec rubocop --fail-level autocorrect
 

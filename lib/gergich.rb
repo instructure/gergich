@@ -4,6 +4,8 @@ require "erb"
 require "json"
 require "fileutils"
 require "base64"
+require "open3"
+require_relative "logging"
 
 GERGICH_REVIEW_LABEL = ENV.fetch("GERGICH_REVIEW_LABEL", "Code-Review")
 GERGICH_USER = ENV.fetch("GERGICH_USER", "gergich")
@@ -12,24 +14,35 @@ GERGICH_GIT_PATH = ENV.fetch("GERGICH_GIT_PATH", ".")
 GergichError = Class.new(StandardError)
 
 module Gergich
+  include Logging
   def self.use_git?
-    Dir.chdir(GERGICH_GIT_PATH) do
-      system "git rev-parse --show-toplevel >/dev/null 2>&1"
-    end
+    !git("rev-parse --show-toplevel").nil?
   end
 
   def self.git(args)
     Dir.chdir(GERGICH_GIT_PATH) do
-      `git #{args} 2>/dev/null`
+      raise(GergichError, "git not installed") unless system("which git > /dev/null 2>&1")
+
+      output, error, status = Open3.capture3("git #{args}")
+      if status.success?
+        Logging.logger.debug "git #{args}: #{output}"
+        output
+      else
+        Logging.logger.warn "Output: #{output}"
+        Logging.logger.warn "git #{args} failed: #{error}"
+        nil
+      end
     end
   end
 
   class Commit
+    include Logging
     attr_reader :ref
 
     def initialize(ref = ENV.fetch("GERRIT_PATCHSET_REVISION", "HEAD"), revision_number = nil)
       @ref = ref
       @revision_number = revision_number
+      logger.debug "Commit initialized with ref: #{ref}"
     end
 
     def info
