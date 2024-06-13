@@ -62,14 +62,14 @@ RSpec.describe Gergich::Commit do
   end
 
   describe "#change_id" do
-    it "supports branches with slashes" do
+    it "supports branches and project names with slashes" do
       allow(ENV).to receive(:[]).with("GERRIT_PATCHSET_REVISION").and_return("commit-ish")
-      allow(ENV).to receive(:[]).with("GERRIT_PROJECT").and_return("spec-project")
+      allow(ENV).to receive(:[]).with("GERRIT_PROJECT").and_return("namespace/spec-project")
       allow(ENV).to receive(:[]).with("GERRIT_BRANCH").and_return("releases/2017.11.17")
       allow(ENV).to receive(:[]).with("GERRIT_CHANGE_ID").and_return("dummychangeset")
 
       expect(described_class.new.change_id) # %2F = / and %7E = ~
-        .to match("spec-project~releases%2F2017.11.17~dummychangeset")
+        .to match("namespace%2Fspec-project~releases%2F2017.11.17~dummychangeset")
     end
   end
 end
