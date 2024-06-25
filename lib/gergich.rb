@@ -3,7 +3,6 @@
 require "erb"
 require "json"
 require "fileutils"
-require "base64"
 require "open3"
 require_relative "logging"
 
@@ -68,7 +67,7 @@ module Gergich
         Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
       else
         raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
-        Base64.decode64(raw)
+        raw.unpack1("m")
           .scan(%r{^diff --git a/.*? b/(.*?)$})
           .flatten
       end

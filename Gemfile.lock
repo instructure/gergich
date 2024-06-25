@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    gergich (2.1.5)
+    gergich (2.2.1)
       httparty (~> 0.17)
       sqlite3 (>= 1.4, < 3.0)
 
