@@ -91,7 +91,7 @@ module Gergich
 
     def change_id
       if info[:project] && info[:branch]
-        "#{info[:project]}~#{ERB::Util.url_encode info[:branch]}~#{info[:change_id]}"
+        "#{ERB::Util.url_encode info[:project]}~#{ERB::Util.url_encode info[:branch]}~#{info[:change_id]}"
       else
         info[:change_id]
       end
