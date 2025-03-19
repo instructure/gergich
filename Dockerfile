@@ -20,7 +20,7 @@ COPY --chown=docker:docker Gemfile Gemfile.lock gergich.gemspec /usr/src/app/
 COPY --chown=docker:docker exe/* /usr/src/app/exe/
 RUN mkdir -p coverage
 
-RUN bash -lc "rvm 2.7 do gem install bundler -v 2.2.27"
+RUN bash -lc "rvm 2.7 do gem install bundler -v 2.4.22"
 
 RUN /bin/bash -lc "cd /usr/src/app && rvm 2.7 do bundle install --jobs 5"
 COPY --chown=docker:docker . /usr/src/app
