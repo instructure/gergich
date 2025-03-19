@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage              = "https://github.com/instructure/gergich"
   s.license               = "MIT"
 
-  s.required_ruby_version = ">= 2.6"
+  s.required_ruby_version = ">= 2.7"
 
   s.bindir = "exe"
   s.executables = %w[gergich master_bouncer]
