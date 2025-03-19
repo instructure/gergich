@@ -4,11 +4,11 @@ require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::I18nlinerCapture do
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       1)
       invalid signature on line 4: <unsupported expression>
       jsapp/models/user.js
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [

@@ -10,7 +10,7 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
   let(:unused_quantity) { 'For language "fr" (French) the following quantities are not relevant: few, zero [UnusedQuantity]' }
   # rubocop:enable Layout/LineLength
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       /path/to/some.xml:27: Warning: #{rtl_hardcoded}
           android:drawableLeft="@drawable/ic_cv_media"/>
           ~~~~~~~~~~~~~~~~~~~~
@@ -23,7 +23,7 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
           <plurals name="number">
           ^
 
-    OUTPUT
+    TEXT
   end
 
   let(:comments) do
@@ -31,9 +31,7 @@ RSpec.describe Gergich::Capture::AndroidlintCapture do
       {
         path: "/path/to/some.xml",
         position: 27,
-        # rubocop:disable Layout/LineLength
         message: "#{rtl_hardcoded}\n\n    android:drawableLeft=\"@drawable/ic_cv_media\"/>\n    ~~~~~~~~~~~~~~~~~~~~",
-        # rubocop:enable Layout/LineLength
         severity: "warn",
         source: "androidlint"
       },

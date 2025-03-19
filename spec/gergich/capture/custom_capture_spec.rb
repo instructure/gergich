@@ -14,9 +14,9 @@ RSpec.describe "CustomCaptor" do
   end
   let(:capture_format) { "custom:sqlite3:CustomCaptor" }
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       foo.rb:1: you done screwed up
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [

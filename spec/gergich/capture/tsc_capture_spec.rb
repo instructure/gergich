@@ -4,11 +4,11 @@ require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::TscCapture do
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       bad.ts(2,3): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
       bad.ts(4,10): error TS2345: Argument of type 'string' is not assignable to parameter of type 'number'.
         Some extra info on this error
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [

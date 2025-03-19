@@ -10,14 +10,14 @@ module Gergich
           (.*?)\n     #   jsapp/models/user.js
         }mx
 
-        output.scan(pattern).map { |error, file|
+        output.scan(pattern).filter_map do |error, file|
           line = 1
           error.sub!(/ on line (\d+)/) do
             line = Regexp.last_match[1]
             ""
           end
           { path: file, message: error, source: "i18n", position: line.to_i, severity: "error" }
-        }.compact
+        end
       end
     end
   end

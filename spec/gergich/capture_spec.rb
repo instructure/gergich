@@ -6,10 +6,10 @@ RSpec.describe Gergich::Capture do
   let!(:draft) { double }
 
   let :output do
-    <<~OUTPUT
+    <<~TEXT
       #{path}
         4:21  error  Missing semicolon  semi
-    OUTPUT
+    TEXT
   end
 
   before do

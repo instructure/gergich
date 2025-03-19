@@ -4,7 +4,7 @@ require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::ShellcheckCapture do
   let(:output) do
-    <<~'OUTPUT'
+    <<~'TEXT'
       [
         {
           "file": "bin/sync-translations.sh",
@@ -47,7 +47,7 @@ RSpec.describe Gergich::Capture::ShellcheckCapture do
           "message": "Delete trailing spaces after \\ to break line (or use quotes for literal space)."
         }
       ]
-    OUTPUT
+    TEXT
   end
 
   let(:comments) do

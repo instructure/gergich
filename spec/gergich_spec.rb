@@ -272,8 +272,10 @@ RSpec.describe Gergich::Review do
 
     context "with something to publish" do
       before do
-        allow(review).to receive_messages(anything_to_publish?: true, already_commented?: false,
-                                          generate_payload: {}, my_messages: [])
+        allow(review).to receive_messages(anything_to_publish?: true,
+                                          already_commented?: false,
+                                          generate_payload: {},
+                                          my_messages: [])
       end
 
       it {
@@ -305,7 +307,8 @@ RSpec.describe Gergich::Review do
 
     context "with something to publish" do
       before do
-        allow(review).to receive_messages(anything_to_publish?: true, already_commented?: false,
+        allow(review).to receive_messages(anything_to_publish?: true,
+                                          already_commented?: false,
                                           generate_payload: {})
       end
 

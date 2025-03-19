@@ -4,11 +4,11 @@ require_relative "../../support/capture_shared_examples"
 
 RSpec.describe Gergich::Capture::EslintCapture do
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       jsapp/models/user.js
         4:21  error    Missing semicolon  semi
         5:1   warning  Too much cowbell   cowbell-overload
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [

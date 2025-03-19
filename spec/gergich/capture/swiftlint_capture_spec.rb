@@ -9,11 +9,11 @@ RSpec.describe Gergich::Capture::SwiftlintCapture do
   let(:force_cast_violation) { "Force Cast Violation: Force casts should be avoided. (force_cast)" }
   # rubocop:enable Layout/LineLength
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       /path/to/My.swift:13:22: warning: #{colon_violation}
       /path/to/Fail.swift:76: warning: #{line_length_violation}
       /path/to/Cast.swift:15:9: error: #{force_cast_violation}
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [

@@ -6,7 +6,7 @@ module Gergich
       def run(output)
         pattern = /([^(\n]+)\((\d+),(\d+)\): (\w+) (\w+): (.*(\n  .*)*)/
 
-        output.scan(pattern).map { |file, line, pos, severity, code, error|
+        output.scan(pattern).map do |file, line, pos, severity, code, error|
           {
             path: file,
             message: error,
@@ -20,7 +20,7 @@ module Gergich
             },
             severity: severity
           }
-        }
+        end
       end
     end
   end

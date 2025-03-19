@@ -1,50 +1,19 @@
+inherit_gem:
+  rubocop-inst:
+    - rubocop.yml
+    - rubocop-rspec.yml
+
 plugins:
   - rubocop-rake
   - rubocop-rspec
 
 AllCops:
   TargetRubyVersion: 2.7
-  NewCops: enable
 
-Layout/LineLength:
-  Max: 100
-Layout/MultilineMethodCallIndentation:
-  EnforcedStyle: indented
-Layout/EndAlignment:
-  EnforcedStyleAlignWith: variable
-
-Metrics:
-  Enabled: false
-
-RSpec/ExampleLength:
-  Enabled: false
 RSpec/IndexedLet:
   Enabled: false
-RSpec/MessageSpies:
-  Enabled: false
-RSpec/MultipleExpectations:
-  Enabled: false
-RSpec/MultipleMemoizedHelpers:
-  Enabled: false
-RSpec/NestedGroups:
-  Enabled: false
 
-Style/BlockDelimiters:
-  EnforcedStyle: semantic
 Style/Documentation:
   Enabled: false
 Style/FetchEnvVar:
-  Enabled: false
-Style/Lambda:
-  Enabled: false
-Style/MultilineTernaryOperator:
-  Enabled: false
-Style/PercentLiteralDelimiters:
-  PreferredDelimiters:
-    '%W': '[]'
-    '%i': '[]'
-    '%w': '[]'
-Style/StringLiterals:
-  EnforcedStyle: double_quotes
-Style/StderrPuts:
   Enabled: false

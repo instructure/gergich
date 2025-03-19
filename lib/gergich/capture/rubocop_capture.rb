@@ -30,9 +30,7 @@ module Gergich
 
         parts = output.split(first_line_pattern)
 
-        unless parts.last.match?(/^\d+ files? inspect/)
-          raise "RuboCop failed to run properly:\n\n#{output}"
-        end
+        raise "RuboCop failed to run properly:\n\n#{output}" unless parts.last.match?(/^\d+ files? inspect/)
 
         # strip off the summary line from the last error
         parts[-1] = parts[-1].split("\n")[0..-2].join("\n")
@@ -50,7 +48,7 @@ module Gergich
           # if there is code context at the end, separate it and indent it
           # so that gerrit preserves formatting
           if /(?<context>[^\n]+\n *\^+\n)/m =~ message
-            message.sub!(context, "\n#{context.gsub(/^/, ' ')}")
+            message.sub!(context, "\n#{context.gsub(/^/, " ")}")
           end
           match = message.match(
             %r{

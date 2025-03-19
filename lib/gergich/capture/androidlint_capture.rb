@@ -33,7 +33,7 @@ module Gergich
            [\s~\^]+\n)?
         /mx
 
-        output.scan(pattern).map { |file, line, severity, error, context|
+        output.scan(pattern).filter_map do |file, line, severity, error, context|
           context = "\n\n#{context}" if context
           {
             path: file,
@@ -42,7 +42,7 @@ module Gergich
             severity: SEVERITY_MAP[severity],
             source: "androidlint"
           }
-        }.compact
+        end
       end
     end
   end

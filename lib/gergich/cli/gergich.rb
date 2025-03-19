@@ -8,20 +8,24 @@ CI_TEST_ARGS = {
     [
       { path: "foo.rb", position: 3, severity: "error", message: "ಠ_ಠ" },
       { path: "/COMMIT_MSG", position: 1, severity: "info", message: "cool story bro" },
-      { path: "/COMMIT_MSG", severity: "info", message: "lol",
+      { path: "/COMMIT_MSG",
+        severity: "info",
+        message: "lol",
         position: { start_line: 1, start_character: 1, end_line: 1, end_character: 2 } },
-      { path: "/COMMIT_MSG", severity: "info", message: "more",
+      { path: "/COMMIT_MSG",
+        severity: "info",
+        message: "more",
         position: { start_line: 1, start_character: 5, end_line: 1, end_character: 5 } }
     ].to_json
   ],
   "label" => ["Code-Review", 1],
   "message" => ["this is a test"],
-  "capture" => ["rubocop", format("echo %<output>s", output: Shellwords.escape(<<~OUTPUT))]
+  "capture" => ["rubocop", format("echo %{output}s", output: Shellwords.escape(<<~TEXT))]
     bin/gergich:47:8: C: Prefer double-quoted strings
     if ENV['DEBUG']
            ^^^^^^^
     1 file inspected, 35 offenses detected, 27 offenses auto-correctable
-  OUTPUT
+  TEXT
 }.freeze
 
 def run_ci_test!(all_commands)
@@ -44,9 +48,7 @@ def run_ci_test!(all_commands)
   commands.each do |command, args = []| # rubocop:disable Style/HashEachMethods
     arglist = args.map { |arg| Shellwords.escape(arg.to_s) }
     output = `bundle exec gergich #{command} #{arglist.join(" ")} 2>&1`
-    unless $CHILD_STATUS.success?
-      error "`gergich citest` failed on step `#{command}`:\n\n#{output.gsub(/^/, '  ')}\n"
-    end
+    error "`gergich citest` failed on step `#{command}`:\n\n#{output.gsub(/^/, "  ")}\n" unless $CHILD_STATUS.success?
   end
 end
 
@@ -54,10 +56,10 @@ commands = {}
 
 commands["reset"] = {
   summary: "Clear out pending comments/labels/messages for this patchset",
-  action: -> {
+  action: lambda {
     Gergich::Draft.new.reset!
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich reset
 
@@ -68,14 +70,14 @@ commands["reset"] = {
 
 commands["publish"] = {
   summary: "Publish the draft for this patchset",
-  action: -> {
+  action: lambda {
     if (data = Gergich::Review.new.publish!)
       puts "Published #{data[:total_comments]} comments, set score to #{data[:score]}"
     else
       puts "Nothing to publish"
     end
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich publish
 
@@ -91,11 +93,11 @@ commands["publish"] = {
 
 commands["status"] = {
   summary: "Show the current draft for this patchset",
-  action: -> {
+  action: lambda {
     commit = Gergich::Commit.new
     Gergich::Review.new(commit).status
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich status
 
@@ -109,7 +111,7 @@ commands["status"] = {
 
 commands["comment"] = {
   summary: "Add one or more draft comments to this patchset",
-  action: ->(comment_data) {
+  action: lambda { |comment_data|
     comment_data = begin
       JSON.parse(comment_data)
     rescue JSON::ParserError
@@ -125,7 +127,7 @@ commands["comment"] = {
                         comment["severity"]
     end
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich comment <comment_data>
 
@@ -160,11 +162,11 @@ commands["comment"] = {
 
 commands["message"] = {
   summary: "Add a draft cover message to this patchset",
-  action: ->(message) {
+  action: lambda { |message|
     draft = Gergich::Draft.new
     draft.add_message message
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich message <message>
 
@@ -176,10 +178,10 @@ commands["message"] = {
 
 commands["label"] = {
   summary: "Add a draft label (e.g. Code-Review -1) to this patchset",
-  action: ->(label, score) {
+  action: lambda { |label, score|
     Gergich::Draft.new.add_label label, score
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich label <label> <score>
 
@@ -194,12 +196,12 @@ commands["label"] = {
 
 commands["capture"] = {
   summary: "Run a command and translate its output into `gergich comment` calls",
-  action: ->(format, command) {
+  action: lambda { |format, command|
     require_relative "../../gergich/capture"
     status, = Gergich::Capture.run(format, command)
     exit status
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich capture <format> <command>
 
@@ -241,11 +243,11 @@ commands["capture"] = {
 
 commands["citest"] = {
   summary: "Do a full gergich test based on the current commit",
-  action: -> {
+  action: lambda {
     # automagically test any new command that comes along
     run_ci_test!(commands.keys)
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       gergich citest
 

@@ -6,7 +6,7 @@ RSpec.describe Gergich::Capture::RubocopCapture do
   subject(:captor) { described_class.new }
 
   let(:output) do
-    <<~OUTPUT
+    <<~TEXT
       Offenses:
 
       bin/gergich:47:8: C: Style/StringLiteral: Prefer double-quoted strings
@@ -29,7 +29,7 @@ RSpec.describe Gergich::Capture::RubocopCapture do
           ^^^^^^^^^^^^
 
       1 file inspected, 35 offenses detected, 27 offenses auto-correctable
-    OUTPUT
+    TEXT
   end
   let(:comments) do
     [
@@ -56,14 +56,14 @@ RSpec.describe Gergich::Capture::RubocopCapture do
       {
         path: "lib/gergich.rb",
         position: 10,
-        message: <<~OUTPUT,
+        message: <<~TEXT,
           this is a terrible name
 
           seriously, what were you thinking?
 
                def foo
                    ^^^
-        OUTPUT
+        TEXT
         severity: "error",
         correctable: false,
         corrected: false,
@@ -73,12 +73,12 @@ RSpec.describe Gergich::Capture::RubocopCapture do
       {
         path: "lib/gergich.rb",
         position: 22,
-        message: <<~OUTPUT,
+        message: <<~TEXT,
           Line is too long. [55/54]
 
                def initialize(ref = "HEAD", revision_number = nil)
                                                                 ^^
-        OUTPUT
+        TEXT
         severity: "warn",
         correctable: false,
         corrected: false,
@@ -111,9 +111,9 @@ RSpec.describe Gergich::Capture::RubocopCapture do
   it_behaves_like "a captor"
 
   it "raises an error if it couldn't run" do
-    expect { captor.run(<<-OUTPUT) }.to raise_error(/RuboCop failed to run properly/)
+    expect { captor.run(<<-TEXT) }.to raise_error(/RuboCop failed to run properly/)
       Could not find i18n-1.8.9 in any of the sources
       Run `bundle install` to install missing gems.
-    OUTPUT
+    TEXT
   end
 end

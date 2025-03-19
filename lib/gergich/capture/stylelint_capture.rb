@@ -32,8 +32,8 @@ module Gergich
       PATTERN = /#{FILE_PATH_PATTERN}((#{ERROR_PATTERN})+)/.freeze
 
       def run(output)
-        output.scan(PATTERN).map { |file, errors|
-          errors.scan(ERROR_PATTERN).map { |line, severity, error|
+        output.scan(PATTERN).map do |file, errors|
+          errors.scan(ERROR_PATTERN).map do |line, severity, error|
             severity = SEVERITY_MAP[severity]
             {
               path: file,
@@ -42,8 +42,8 @@ module Gergich
               position: line.to_i,
               severity: severity
             }
-          }
-        }.flatten.compact
+          end
+        end.flatten.compact
       end
     end
   end

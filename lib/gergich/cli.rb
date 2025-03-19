@@ -22,14 +22,14 @@ def usage(content = nil)
 end
 
 def error(text)
-  $stderr.puts "\e[31mError:\e[0m #{text}"
-  $stderr.puts usage
+  warn "\e[31mError:\e[0m #{text}"
+  warn usage
   exit 1
 end
 
 def help_command(commands)
   {
-    action: ->(subcommand = "help") {
+    action: lambda { |subcommand = "help"|
       subcommand_info = commands[subcommand]
       if !subcommand_info
         error "Unrecognized command `#{subcommand}`"
@@ -39,15 +39,15 @@ def help_command(commands)
         error "No help available for `#{subcommand}`"
       end
     },
-    help: -> {
+    help: lambda {
       indentation = commands.keys.map(&:size).max
       commands_help = commands
-        .to_a
-        .sort_by(&:first)
-        .map { |key, data|
-          "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
-        }
-        .compact
+                      .to_a
+                      .sort_by(&:first)
+                      .filter_map do |key, data|
+        "#{key.ljust(indentation)} - #{data[:summary]}" if data[:summary]
+      end
+
       usage(commands_help.join("\n"))
     }
   }
@@ -60,7 +60,7 @@ def run_command(action)
   end
   if ARGV.size > params.size
     extra_args = ARGV[params.size, ARGV.size].map { |a| "`#{Shellwords.escape(a)}`" }
-    error "Extra arg(s) #{extra_args.join(' ')}"
+    error "Extra arg(s) #{extra_args.join(" ")}"
   end
   action.call(*ARGV)
 end
@@ -73,10 +73,10 @@ def run_app(commands)
     begin
       action = commands[command][:action]
       run_command(action)
-    rescue GergichError
-      error $ERROR_INFO.message
-    rescue StandardError
-      error "Unhandled exception: #{$ERROR_INFO}\n#{$ERROR_INFO.backtrace.join("\n")}"
+    rescue GergichError => e
+      error e.message
+    rescue => e
+      error "Unhandled exception: #{e}\n#{e.backtrace.join("\n")}"
     end
   else
     error "Unrecognized command `#{command}`"

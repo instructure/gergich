@@ -64,13 +64,13 @@ module Gergich
 
     def files
       @files ||= if Gergich.use_git?
-        Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
-      else
-        raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
-        raw.unpack1("m")
-          .scan(%r{^diff --git a/.*? b/(.*?)$})
-          .flatten
-      end
+                   Gergich.git("diff-tree --no-commit-id --name-only -r #{ref}").split
+                 else
+                   raw = API.get("/changes/#{change_id}/revisions/#{revision_id}/patch", raw: true)
+                   raw.unpack1("m")
+                      .scan(%r{^diff --git a/.*? b/(.*?)$})
+                      .flatten
+                 end
     end
 
     def revision_id
@@ -173,7 +173,7 @@ module Gergich
 
       review_info[:comments].each do |file, comments|
         comments.each do |comment|
-          puts "#{file}:#{comment[:line] || comment[:range]['start_line']}\n#{comment[:message]}"
+          puts "#{file}:#{comment[:line] || comment[:range]["start_line"]}\n#{comment[:message]}"
         end
       end
     end
@@ -204,17 +204,16 @@ module Gergich
 
     def my_messages
       @my_messages ||= API.get("/changes/#{commit.change_id}/detail")["messages"]
-        .select { |message| message["author"] && message["author"]["username"] == GERGICH_USER }
+                          .select { |message| message["author"] && message["author"]["username"] == GERGICH_USER }
     end
 
     # currently, cover message only supports the GERGICH_REVIEW_LABEL.
     # i.e., even if gergich has "Code-Review: -2"
     def current_label
       @current_label ||= API.get("/changes/#{commit.change_id}/detail")["labels"]
-        .fetch(GERGICH_REVIEW_LABEL, {})
-        .fetch("all", [])
-        .select { |label| label["username"] == GERGICH_USER }
-        .first
+                            .fetch(GERGICH_REVIEW_LABEL, {})
+                            .fetch("all", [])
+                            .find { |label| label["username"] == GERGICH_USER }
     end
 
     def current_label_date
@@ -304,7 +303,7 @@ module Gergich
         ret = HTTParty.send(method, url, options).body
         return ret if options[:raw]
 
-        ret = ret.sub(/\A\)\]\}'\n/, "")
+        ret = ret.delete_prefix(")]}'\n")
         if ret && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         elsif ret =~ /Not found: (?<change_id>.*)/i
@@ -322,7 +321,7 @@ module Gergich
       def base_uri
         @base_uri ||=
           ENV["GERRIT_BASE_URL"] ||
-          (ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}") ||
+          (ENV.key?("GERRIT_HOST") && "https://#{ENV["GERRIT_HOST"]}") ||
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
       end
 
@@ -372,7 +371,7 @@ module Gergich
 
     def db_file
       @db_file ||= File.expand_path(
-        "#{ENV.fetch('GERGICH_DB_PATH', '/tmp')}/#{GERGICH_USER}-#{commit.revision_id}.sqlite3"
+        "#{ENV.fetch("GERGICH_DB_PATH", "/tmp")}/#{GERGICH_USER}-#{commit.revision_id}.sqlite3"
       )
     end
 
@@ -528,7 +527,7 @@ module Gergich
         {
           comments: comments,
           cover_message_parts: cover_message_parts,
-          total_comments: all_comments.map(&:count).inject(&:+),
+          total_comments: all_comments.sum(&:count),
           score: labels[GERGICH_REVIEW_LABEL],
           labels: labels
         }
@@ -574,7 +573,7 @@ module Gergich
     end
 
     def add_comment(position, message, severity)
-      position = position.to_i if position =~ /\A\d+\z/
+      position = position.to_i if /\A\d+\z/.match?(position)
       comments[position] << "[#{severity.upcase}] #{message}"
       self.min_score = [min_score || 0, Draft::SEVERITY_MAP[severity]].min
     end

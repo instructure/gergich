@@ -10,8 +10,11 @@ require_relative "../../gergich"
 
 PROJECT = ENV["GERRIT_PROJECT"] || error("no GERRIT_PROJECT set")
 # on Jenkins GERRIT_MAIN_BRANCH env var will default to empty string if not set
-MAIN_BRANCH = ENV["GERRIT_MAIN_BRANCH"].nil? || ENV["GERRIT_MAIN_BRANCH"].empty? ? "master" :
-        ENV["GERRIT_MAIN_BRANCH"]
+MAIN_BRANCH = if ENV["GERRIT_MAIN_BRANCH"].nil? || ENV["GERRIT_MAIN_BRANCH"].empty?
+                "master"
+              else
+                ENV["GERRIT_MAIN_BRANCH"]
+              end
 # TODO: time-based thresholds
 WARN_DISTANCE = ENV.fetch("MASTER_BOUNCER_WARN_DISTANCE", 50).to_i
 ERROR_DISTANCE = ENV.fetch("MASTER_BOUNCER_ERROR_DISTANCE", 100).to_i
@@ -48,9 +51,11 @@ def maybe_bounce_commit!(commit)
   review = Gergich::Review.new(commit, draft)
   current_score = review.current_score
 
-  puts "#{detail}, " + (score == current_score ?
-                        "score still #{score}" :
-                        "changing score from #{current_score} to #{score}")
+  puts "#{detail}, " + (if score == current_score
+                          "score still #{score}"
+                        else
+                          "changing score from #{current_score} to #{score}"
+                        end)
 
   # since we run on a daily cron, we might be checking the same patchset
   # many times, so bail if nothing has changed
@@ -71,10 +76,10 @@ commands = {}
 
 commands["check"] = {
   summary: "Check the current commit's age",
-  action: -> {
+  action: lambda {
     maybe_bounce_commit! Gergich::Commit.new
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       master_bouncer check
 
@@ -86,7 +91,7 @@ commands["check"] = {
 
 commands["check_all"] = {
   summary: "Check the age of all potentially mergeable changes",
-  action: -> {
+  action: lambda {
     gerrit_host = ENV["GERRIT_HOST"] || error("No GERRIT_HOST set")
     Gergich.git("fetch")
 
@@ -107,14 +112,14 @@ commands["check_all"] = {
       refspec = revinfo["ref"]
       number = revinfo["_number"]
 
-      print "Checking g/#{change['_number']}... "
+      print "Checking g/#{change["_number"]}... "
       Gergich.git("fetch ssh://#{gerrit_host}:29418/#{PROJECT} #{refspec}")
 
       maybe_bounce_commit! Gergich::Commit.new(sha, number)
       sleep 1
     end
   },
-  help: -> {
+  help: lambda {
     <<~TEXT
       master_bouncer check_all
 

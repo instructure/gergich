@@ -13,13 +13,16 @@ module Gergich
           ((#{error_pattern})+)  #     4:21  error  Missing semicolon  semi
         }mx
 
-        output.scan(pattern).map { |file, errors|
-          errors.scan(error_pattern).map { |line, severity, error|
+        output.scan(pattern).filter_map do |file, errors|
+          errors.scan(error_pattern).map do |line, severity, error|
             severity = SEVERITY_MAP[severity]
-            { path: file, message: error, source: "eslint", position: line.to_i,
+            { path: file,
+              message: error,
+              source: "eslint",
+              position: line.to_i,
               severity: severity }
-          }
-        }.compact.flatten
+          end
+        end.flatten
       end
     end
   end

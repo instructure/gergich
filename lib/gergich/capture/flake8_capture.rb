@@ -10,10 +10,13 @@ module Gergich
           ^([^:\n]+):(\d+):\d+:\s(.*?)\n
         /mx
 
-        output.scan(pattern).map { |file, line, error|
-          { path: file, message: error, source: "flake8",
-            position: line.to_i, severity: "error" }
-        }.compact
+        output.scan(pattern).filter_map do |file, line, error|
+          { path: file,
+            message: error,
+            source: "flake8",
+            position: line.to_i,
+            severity: "error" }
+        end
       end
     end
   end

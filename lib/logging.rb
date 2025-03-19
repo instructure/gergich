@@ -12,7 +12,7 @@ module Logging
     @logger.formatter = proc do |severity, datetime, _progname, msg|
       datefmt = datetime.strftime("%Y-%m-%d %H:%M:%S")
       # ensure that there is only one newline at the end of the message
-      "#{severity} [#{datefmt}]: #{msg}\n".gsub!(/\n+/, "\n")
+      "#{severity} [#{datefmt}]: #{msg}\n".squeeze!("\n")
     end
     @logger
   end
