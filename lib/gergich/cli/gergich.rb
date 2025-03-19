@@ -38,10 +38,10 @@ def run_ci_test!(all_commands)
   # vone on other branches depending on project usage and project-specific permissions
   commands << ["label", ["Lint-Review", 1]]
   commands << ["label", ["Code-Review", 1]] # Not all projects have Lint-Review
-  commands << ["message", ["\`gergich citest\` checks out :thumbsup: :mj:"]]
+  commands << ["message", ["`gergich citest` checks out :thumbsup: :mj:"]]
   commands << ["publish"]
 
-  commands.each do |command, args = []|
+  commands.each do |command, args = []| # rubocop:disable Style/HashEachMethods
     arglist = args.map { |arg| Shellwords.escape(arg.to_s) }
     output = `bundle exec gergich #{command} #{arglist.join(" ")} 2>&1`
     unless $CHILD_STATUS.success?

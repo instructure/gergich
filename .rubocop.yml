@@ -1,4 +1,4 @@
-require:
+plugins:
   - rubocop-rake
   - rubocop-rspec
 
@@ -18,6 +18,8 @@ Metrics:
 
 RSpec/ExampleLength:
   Enabled: false
+RSpec/IndexedLet:
+  Enabled: false
 RSpec/MessageSpies:
   Enabled: false
 RSpec/MultipleExpectations:
@@ -30,6 +32,8 @@ RSpec/NestedGroups:
 Style/BlockDelimiters:
   EnforcedStyle: semantic
 Style/Documentation:
+  Enabled: false
+Style/FetchEnvVar:
   Enabled: false
 Style/Lambda:
   Enabled: false

@@ -33,8 +33,8 @@ RSpec.describe Gergich::Capture::TscCapture do
           end_line: 4,
           end_character: 10
         },
-        message: "Argument of type 'string' is not assignable to parameter of type 'number'.\n" \
-                 "  Some extra info on this error",
+        message: "Argument of type 'string' is not assignable to parameter of type 'number'.\n  " \
+                 "Some extra info on this error",
         severity: "error",
         source: "tsc",
         rule: "TS2345"

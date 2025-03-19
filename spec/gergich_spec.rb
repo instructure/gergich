@@ -2,9 +2,9 @@
 
 require "httparty"
 
-RSpec.describe Gergich::API do # rubocop:todo RSpec/MultipleDescribes yes, this file _should_ be broken up
+RSpec.describe Gergich::API do # rubocop:todo RSpec/MultipleDescribes -- yes, this file _should_ be broken up
   context "with bad change-id" do
-    let(:result) { instance_double("HTTParty::Response", body: "Not Found: 1234") }
+    let(:result) { instance_double(HTTParty::Response, body: "Not Found: 1234") }
 
     before do
       allow(HTTParty).to receive(:send).and_return(result)
@@ -48,7 +48,8 @@ RSpec.describe Gergich::API do # rubocop:todo RSpec/MultipleDescribes yes, this 
       allow(described_class).to receive(:base_uri).and_return("https://gerrit.foobar.com")
 
       expect(described_class.send(:prepare_options, {}))
-        .to match(hash_including(basic_auth: { username: "gergich", password: ENV["GERGICH_KEY"] }))
+        .to match(hash_including(basic_auth: { username: "gergich",
+                                               password: ENV["GERGICH_KEY"] }))
 
       ENV["GERGICH_DIGEST_AUTH"] = original_basic_auth
       ENV["GERGICH_KEY"] = original_gergich_key
@@ -77,7 +78,7 @@ end
 RSpec.describe Gergich::Draft do
   let!(:draft) do
     commit = instance_double(
-      "Commit",
+      Gergich::Commit,
       files: [
         "foo.rb",
         "bar/baz.lol"
@@ -238,7 +239,7 @@ RSpec.describe Gergich::Review do
   let(:change_id) { "test" }
   let!(:commit) do
     instance_double(
-      "Commit",
+      Gergich::Commit,
       change_id: change_id,
       files: [
         "foo.rb",
@@ -271,10 +272,8 @@ RSpec.describe Gergich::Review do
 
     context "with something to publish" do
       before do
-        allow(review).to receive(:anything_to_publish?).and_return(true)
-        allow(review).to receive(:already_commented?).and_return(false)
-        allow(review).to receive(:generate_payload).and_return({})
-        allow(review).to receive(:my_messages).and_return([])
+        allow(review).to receive_messages(anything_to_publish?: true, already_commented?: false,
+                                          generate_payload: {}, my_messages: [])
       end
 
       it {
@@ -306,9 +305,8 @@ RSpec.describe Gergich::Review do
 
     context "with something to publish" do
       before do
-        allow(review).to receive(:anything_to_publish?).and_return(true)
-        allow(review).to receive(:already_commented?).and_return(false)
-        allow(review).to receive(:generate_payload).and_return({})
+        allow(review).to receive_messages(anything_to_publish?: true, already_commented?: false,
+                                          generate_payload: {})
       end
 
       it "publishes via the api" do
@@ -320,42 +318,42 @@ RSpec.describe Gergich::Review do
 
   describe "#anything_to_publish?" do
     before do
-      allow(review).to receive(:current_label).and_return("BAHA")
-      allow(review).to receive(:current_label_revision).and_return("Revision trash stuff")
+      allow(review).to receive_messages(current_label: "BAHA",
+                                        current_label_revision: "Revision trash stuff")
     end
 
     context "when no comments exist" do
       it "returns false" do
         allow(review).to receive(:new_score?).and_return(false)
-        expect(review.anything_to_publish?).to eq false
+        expect(review.anything_to_publish?).to be false
       end
     end
 
     context "when comments exist" do
       it "returns true" do
         draft.info[:comments] = "Hello there this is a comment"
-        expect(review.anything_to_publish?).to eq true
+        expect(review.anything_to_publish?).to be true
       end
     end
   end
 
   describe "#new_score?" do
     before do
-      allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
-      allow(review).to receive(:current_score).and_return(0)
+      allow(review).to receive_messages(current_label_is_for_current_revision?: true,
+                                        current_score: 0)
     end
 
     context "when score is the same" do
       it "returns false" do
         draft.info[:score] = 0
-        expect(review.new_score?).to eq false
+        expect(review.new_score?).to be false
       end
     end
 
     context "when score is different" do
       it "returns true" do
         draft.info[:score] = -1
-        expect(review.new_score?).to eq true
+        expect(review.new_score?).to be true
       end
     end
   end
@@ -363,8 +361,8 @@ RSpec.describe Gergich::Review do
   describe "#upcoming_score" do
     context "when current_label_is_for_current_revision? is true" do
       it "returns the min value of draft.info[:score] and current_score" do
-        allow(review).to receive(:current_label_is_for_current_revision?).and_return(true)
-        allow(review).to receive(:current_score).and_return(0)
+        allow(review).to receive_messages(current_label_is_for_current_revision?: true,
+                                          current_score: 0)
         review.draft.info[:score] = 1
         expect(review.upcoming_score).to eq 0
       end

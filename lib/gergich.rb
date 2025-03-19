@@ -308,19 +308,19 @@ module Gergich
         if ret && ret =~ /\A("|\[|\{)/
           JSON.parse("[#{ret}]")[0] # array hack so we can parse a string literal
         elsif ret =~ /Not found: (?<change_id>.*)/i
-          raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]} at #{url}.\n"\
-                "This is most likely due to this"\
-                " Change-Id already being used"\
-                " by an ABANDONED change.\n"\
-                "To fix, `git commit --amend`,"\
-                " remove the Change-Id line, and push again.")
+          raise("Cannot find Change-Id: #{Regexp.last_match[:change_id]} at #{url}.\n" \
+                "This is most likely due to this " \
+                "Change-Id already being used " \
+                "by an ABANDONED change.\n" \
+                "To fix, `git commit --amend`, " \
+                "remove the Change-Id line, and push again.")
         else
           raise("Non-JSON response: #{ret}")
         end
       end
 
       def base_uri
-        @base_uri ||= \
+        @base_uri ||=
           ENV["GERRIT_BASE_URL"] ||
           (ENV.key?("GERRIT_HOST") && "https://#{ENV['GERRIT_HOST']}") ||
           raise(GergichError, "need to set GERRIT_BASE_URL or GERRIT_HOST")
@@ -523,7 +523,7 @@ module Gergich
 
     def info
       @info ||= begin
-        comments = inline_comments.map { |file| [file.path, file.to_a] }.to_h
+        comments = inline_comments.to_h { |file| [file.path, file.to_a] }
 
         {
           comments: comments,
